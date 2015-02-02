@@ -57,7 +57,7 @@ dbView.world = (function() {
   // Begin Public method /initModule/
   initModule = function () {
     stateMap.renderer.setSize( window.innerWidth, window.innerHeight );
-    $('body').append( stateMap.renderer.domElement );
+    $('.canvasContainer').append( stateMap.renderer.domElement );
 
     stateMap.cube = new THREE.Mesh( stateMap.geometry, stateMap.material );
     stateMap.scene.add( stateMap.cube );
