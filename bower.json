@@ -1,0 +1,32 @@
+{
+  "name": "DarwinBots.js",
+  "version": "0.0.0",
+  "homepage": "https://github.com/BradLyman/DarwinBots.js",
+  "authors": [
+    "brad <lyman.brad3211@gmail.com>"
+  ],
+  "description": "Node-Webkit build of the ALife sim. DarwinBots.",
+  "main": "index.html",
+  "moduleType": [
+    "node"
+  ],
+  "keywords": [
+    "nwjs.io",
+    "JavaScript",
+    "DarwinBots"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "threejs": "*",
+    "jquery": "~2.1.3",
+    "amplify": "~1.1.2"
+  }
+}
