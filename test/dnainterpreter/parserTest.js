@@ -54,6 +54,12 @@ module.exports.testStackOp = {
     binOpTest(test, [2, 10], "div", 0.2);
     binOpTest(test, [], "div", 0.0);
     test.done();
+  },
+
+  testUnknown : function(test) {
+    test.expect(1);
+    test.equals(parser.stackOp("aoeu"), undefined, "Unknown stack-ops should be unknown");
+    test.done();
   }
 };
 

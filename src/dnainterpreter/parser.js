@@ -115,6 +115,8 @@ var stackOp = function(code) {
   if (code.match(/div/)) {
     return div;
   }
+
+  return undefined;
 };
 
 
