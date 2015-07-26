@@ -2,17 +2,17 @@ var parser = require('../../src/dnainterpreter/parser.js');
 
 module.exports.testLiteral = function(test) {
   var strings = {
-    valid : "  99.03 ",
+    valid : "  99 ",
     invalid : "ab9ou"
   };
-  var stack = [];
+  var state = parser.createState();
 
   test.expect(3);
 
-  parser.literal(strings.valid)(stack);
+  parser.literal(strings.valid)(state);
 
-  test.equals(stack.length, 1, "Value not pushed to the stack");
-  test.equals(stack[0], 99.03, "Value parsed, but the wrong number was put on the stack");
+  test.equals(state.valStack.length(), 1, "Value not pushed to the stack");
+  test.equals(state.valStack.pop(), 99, "Value parsed, but the wrong number was put on the stack");
 
   test.equals(parser.literal(strings.invalid), undefined);
 
@@ -20,11 +20,17 @@ module.exports.testLiteral = function(test) {
 };
 
 
-var binOpTest = function(test, stack, op, value) {
-  parser.stackOp(op)(stack);
+var binOpTest = function(test, stackVals, op, value) {
+  var state = parser.createState();
 
-  test.equals(stack.length, 1);
-  test.equals(stack[0], value);
+  stackVals.forEach(function(val) {
+    state.valStack.push(val);
+  });
+
+  parser.stackOp(op)(state);
+
+  test.equals(state.valStack.length(), 1);
+  test.equals(state.valStack.pop(), value);
 };
 
 module.exports.testStackOp = {
@@ -50,9 +56,10 @@ module.exports.testStackOp = {
   },
 
   testDiv : function(test) {
-    test.expect(4);
-    binOpTest(test, [2, 10], "div", 0.2);
-    binOpTest(test, [], "div", 0.0);
+    test.expect(6);
+    binOpTest(test, [2, 10], "div", 0);
+    binOpTest(test, [10, 2], "div", 5);
+    binOpTest(test, [], "div", 0);
     test.done();
   },
 
@@ -64,14 +71,14 @@ module.exports.testStackOp = {
 };
 
 module.exports.testBody = function(test) {
-  var stack = [];
+  var state = parser.createState();
   var code  = ["1", "2", "add", "5", "3", "mul", "sub", "stop"];
 
-  parser.body(code)(stack);
+  parser.body(code)(state);
 
   test.expect(2);
-  test.equals(stack.length, 1, "Stack should only have a length of 1 after this body executes");
-  test.equals(stack[0], -12, "First stack value should be -12");
+  test.equals(state.valStack.length(), 1, "Stack should only have a length of 1 after this body executes");
+  test.equals(state.valStack.pop(), -12, "First stack value should be -12");
   test.done();
 };
 
