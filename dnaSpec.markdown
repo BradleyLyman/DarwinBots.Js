@@ -15,17 +15,15 @@ DNA will be specified in BNF-like format.
 
 [Conditional] ::= ["cond"] & *[BoolExpr] & ["start" | "stop" | "end"]
 
-[Body]        ::= ["start"] & *[StackExpr] & ["stop" | "end"]
+[BoolExpr]    ::= *[StackOp] & *[BoolOp];
 
-[BoolExpr]    ::= [Term] & [Term] & [BoolOp]
+[BoolOp]      ::= [">" | "<" | "=" | "!=" | ">=" | "<="]
 
-[BoolOp]      ::= ["=" | ">" | "<" | ">=" | "<="]
+[StackOp]     ::= [Literal] | ["add" | "sub" | "mul" | "div"]
 
-[StackExpr]   ::= [Term] & [StackOp]
+[Body]        ::= ["start"] & *[StackOp] & ["end"];
 
-[Term]        ::= [Integer Literal]
-
-[StackOp]     ::= ["add" | "sub" | "mult" | "div"]
+[Literal]     ::= *[0-9] & ?. & *[0-9]
 ```
 
 ----
