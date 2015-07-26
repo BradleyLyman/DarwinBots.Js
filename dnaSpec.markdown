@@ -13,9 +13,9 @@ DNA will be specified in BNF-like format.
 ```
 [Gene]        ::= [Conditional] & ?[Body]
 
-[Conditional] ::= ["cond"] & *[BoolExpr] & ["start" | "stop" | "end"]
+[Conditional] ::= ["cond"] & *[CondExpr] & ["start" | "stop" | "end"]
 
-[BoolExpr]    ::= *[StackOp] & *[BoolOp];
+[CondExpr]    ::= [StackOp] | [BoolOp];
 
 [BoolOp]      ::= [">" | "<" | "=" | "!=" | ">=" | "<="]
 

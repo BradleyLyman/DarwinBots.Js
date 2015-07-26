@@ -1,5 +1,23 @@
 var parser = require('../../src/dnainterpreter/parser.js');
 
+module.exports.testCondExpr = function(test) {
+  var stackOp = parser.condExpr("5"),
+      boolOp  = parser.condExpr(">"),
+      noOp    = parser.condExpr("start"),
+      state   = parser.createState();
+
+  test.expect(4);
+  test.ok(stackOp, "StackOp expected to return a function");
+  test.ok(boolOp, "BoolOp expected to return a function");
+  test.equals(noOp, undefined, "noOp expected to be undefined");
+
+  stackOp(state);
+  boolOp(state);
+  test.equals(state.boolStack.pop(), false, "Expected value to be false");
+
+  test.done();
+};
+
 var boolTest = function(test, op, paramArray) {
   var boolOp = parser.boolOp(op);
 

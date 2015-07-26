@@ -240,11 +240,33 @@ var boolOp = function(code) {
   return undefined;
 };
 
+var condExpr = function(code) {
+  var op = boolOp(code);
+  if (op === undefined) {
+    return stackOp(code);
+  }
+
+  return op;
+};
 
 module.exports = {
   literal     : literal,
   stackOp     : stackOp,
   body        : body,
   createState : createState,
-  boolOp      : boolOp
+  boolOp      : boolOp,
+  condExpr    : condExpr
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
