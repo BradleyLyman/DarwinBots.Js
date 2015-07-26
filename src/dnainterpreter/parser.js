@@ -46,6 +46,72 @@ var sub = function(state) {
   state.valStack.push(a - b);
 };
 
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a > b) to the
+ * boolStack.
+ **/
+var greaterThan = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a > b);
+};
+
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a < b) to the
+ * boolStack.
+ **/
+var lessThan = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a < b);
+};
+
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a === b) to the
+ * boolStack.
+ **/
+var equalTo = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a === b);
+};
+
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a !== b) to the
+ * boolStack.
+ **/
+var notEqualTo = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a !== b);
+};
+
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a >= b) to the
+ * boolStack.
+ **/
+var greaterOrEqual = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a >= b);
+};
+
+/**
+ * Compares top two values of the value stack [a, b] and pushes the result (a <= b) to the
+ * boolStack.
+ **/
+var lessOrEqual = function(state) {
+  var b = state.valStack.pop();
+  var a = state.valStack.pop();
+
+  state.boolStack.push(a <= b);
+};
+
 
 /**
  * PUBLIC API
@@ -54,15 +120,12 @@ var sub = function(state) {
  **/
 
 /**
- * Creates an instance of the bot state used by the parser.
- * Bot state is just an object of the form:
- * {
- *   valStack : createStack(0, 20)
- * }
+ * Creates an instance of the bot state used by parser's output.
  **/
 var createState = function() {
   return {
-    valStack : createStack(0, 20)
+    valStack  : createStack(0, 20),
+    boolStack : createStack(true, 20)
   };
 };
 
@@ -143,10 +206,45 @@ var body = function(tokenList) {
   };
 };
 
+/**
+ * Parses the code-point as a BoolOp. If parsing is successful then
+ * returns a function which computes the bool op, else returns undefined.
+ **/
+var boolOp = function(code) {
+  if (code.length > 2) { return undefined; } // quick check
+
+  if (code === ">") {
+    return greaterThan;
+  }
+
+  if (code === "<") {
+    return lessThan;
+  }
+
+  if (code === "=") {
+    return equalTo;
+  }
+
+  if (code === "!=") {
+    return notEqualTo;
+  }
+
+  if (code === ">=") {
+    return greaterOrEqual;
+  }
+
+  if (code === "<=") {
+    return lessOrEqual;
+  }
+
+  return undefined;
+};
+
 
 module.exports = {
   literal     : literal,
   stackOp     : stackOp,
   body        : body,
-  createState : createState
+  createState : createState,
+  boolOp      : boolOp
 };

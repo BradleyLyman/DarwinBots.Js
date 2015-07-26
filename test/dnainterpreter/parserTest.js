@@ -1,5 +1,112 @@
 var parser = require('../../src/dnainterpreter/parser.js');
 
+var boolTest = function(test, op, paramArray) {
+  var boolOp = parser.boolOp(op);
+
+  test.expect(1 + paramArray.length);
+  test.ok(boolOp, "Expected boolOp, " + op + ", to be a function");
+
+  paramArray.forEach(function(testObj) {
+    var state = parser.createState();
+    state.valStack.push(testObj.vals[0]);
+    state.valStack.push(testObj.vals[1]);
+
+    boolOp(state);
+
+    test.equals(state.boolStack.pop(), testObj.expected,
+      "Incorrect result when processing " + op + " with vals: " + testObj.vals);
+  });
+  test.done();
+};
+
+module.exports.testBoolOp = {
+  testGreaterThan : function(test) {
+    boolTest(test, ">", [
+      {
+        vals : [2, 10],
+        expected : false
+      },
+      {
+        vals : [10, -5],
+        expected : true
+      }
+    ]);
+  },
+
+  testLessThan : function(test) {
+    boolTest(test, "<", [
+      {
+        vals : [2, 10],
+        expected : true
+      },
+      {
+        vals : [10, -5],
+        expected : false
+      }
+    ]);
+  },
+
+  testEqual : function(test) {
+    boolTest(test, "=", [
+      {
+        vals : [0, 34],
+        expected : false
+      },
+      {
+        vals : [10, 10],
+        expected : true
+      }
+    ]);
+  },
+
+  testNotEqual : function(test) {
+    boolTest(test, "!=", [
+      {
+        vals : [0, 34],
+        expected : true
+      },
+      {
+        vals : [10, 10],
+        expected : false
+      }
+    ]);
+  },
+
+  testGreaterOrEqual : function(test) {
+    boolTest(test, ">=", [
+      {
+        vals : [0, 3],
+        expected : false
+      },
+      {
+        vals : [3, 2],
+        expected : true
+      },
+      {
+        vals : [-34, -34],
+        expected : true
+      }
+    ]);
+  },
+
+  testLessOrEqual : function(test) {
+    boolTest(test, "<=", [
+      {
+        vals : [0, 3],
+        expected : true
+      },
+      {
+        vals : [3, 2],
+        expected : false
+      },
+      {
+        vals : [20, 20],
+        expected : true
+      }
+    ]);
+  }
+};
+
 module.exports.testLiteral = function(test) {
   var strings = {
     valid : "  99 ",
