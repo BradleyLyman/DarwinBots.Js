@@ -63,7 +63,17 @@ module.exports.testStackOp = {
   }
 };
 
+module.exports.testBody = function(test) {
+  var stack = [];
+  var code  = ["1", "2", "add", "5", "3", "mul", "sub", "stop"];
 
+  parser.body(code)(stack);
+
+  test.expect(2);
+  test.equals(stack.length, 1, "Stack should only have a length of 1 after this body executes");
+  test.equals(stack[0], -12, "First stack value should be -12");
+  test.done();
+};
 
 
 

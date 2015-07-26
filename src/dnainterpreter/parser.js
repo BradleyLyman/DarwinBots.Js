@@ -119,8 +119,42 @@ var stackOp = function(code) {
   return undefined;
 };
 
+/**
+ * Parses the given stream of whitespace-stripped tokens and returns a function
+ * which, when given a stack, executes the provided code.
+ * Returns undefined if this is a invalid body segment (e.g. does not start with
+ * the "start" string).
+ **/
+var body = function(tokenList) {
+  var getNextToken = (function() {
+    var index = 0;
+    return function() {
+      if (index >= tokenList.length) {
+        return "";
+      }
+      var curIdx = index;
+      index += 1;
+      return tokenList[curIdx];
+    };
+  }());
+  var ops = [];
+
+  var op = stackOp(getNextToken());
+  while(op !== undefined) {
+    ops.push(op);
+    op = stackOp(getNextToken());
+  }
+
+  return function(stack) {
+    ops.forEach(function(op) {
+      op(stack);
+    });
+  };
+};
+
 
 module.exports = {
   literal : literal,
-  stackOp : stackOp
+  stackOp : stackOp,
+  body    : body
 };
