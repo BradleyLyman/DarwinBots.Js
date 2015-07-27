@@ -341,6 +341,27 @@ var gene = function(tokenList) {
   };
 };
 
+var parseDna = function(tokenList) {
+  var geneBlock  = gene(tokenList),
+      genes = [];
+
+  while(geneBlock !== undefined) {
+    genes.push(geneBlock);
+
+    geneBlock = gene(tokenList);
+  }
+
+  return function(state) {
+    genes.forEach(function(geneBlock) {
+      // flush state before each gene is executed
+      state.valStack.stack  = [];
+      state.boolStack.stack = [];
+
+      geneBlock(state);
+    });
+  };
+};
+
 module.exports = {
   literal     : literal,
   stackOp     : stackOp,
@@ -349,7 +370,8 @@ module.exports = {
   boolOp      : boolOp,
   condExpr    : condExpr,
   condBlock   : condBlock,
-  gene        : gene
+  gene        : gene,
+  parseDna    : parseDna
 };
 
 
