@@ -286,6 +286,12 @@ var binOpTest = function(test, stackVals, op, value) {
 };
 
 module.exports.testStackOp = {
+  testSysvar : function(test) {
+    binOpTest(test, [], ".10", 10);
+    binOpTest(test, [], "*.10", 0);
+    test.done();
+  },
+
   testAdd : function(test) {
     binOpTest(test, [2, 10], "add", 12);
     binOpTest(test, [], "add", 0);
@@ -313,6 +319,19 @@ module.exports.testStackOp = {
 
   testUnknown : function(test) {
     test.equals(parser.stackOp("aoeu"), undefined, "Unknown stack-ops should be unknown");
+    test.done();
+  },
+
+  testStore : function(test) {
+    var storeCmd = parser.stackOp("store"),
+        state    = parser.createState();
+
+    test.ok(storeCmd, "Store should parse into a function");
+    state.valStack.push(1000);
+    state.valStack.push(10);
+    storeCmd(state);
+
+    test.equals(state.sysvars[10], 1000, "1000 should be stored in sysvar .10");
     test.done();
   }
 };

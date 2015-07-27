@@ -19,13 +19,13 @@ DNA will be specified in BNF-like format.
 
 [BoolOp]      ::= [">" | "<" | "=" | "!=" | ">=" | "<="]
 
-[StackOp]     ::= [Literal] | [Sysvar] | ["*" + Sysvar] | ["add" | "sub" | "mul" | "div"]
+[StackOp]     ::= [Literal] | [Sysvar] | ["add" | "sub" | "mul" | "div" | "store"]
 
 [Body]        ::= ["start"] & *[StackOp] & ["end"];
 
 [Literal]     ::= *[0-9]
 
-[Sysvar]      ::= ["."] + [Sysvar Name | [0-128]]
+[Sysvar]      ::= ?["*"] + ["."] + [Sysvar Id]
 ```
 
 ----

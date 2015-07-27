@@ -47,6 +47,19 @@ var sub = function(state) {
 };
 
 /**
+ * Stores a value in a sysvar. Top stack value is sysvar address, second stack value
+ * is the value to store. Does nothing if sysvar address is out of the range [0-127].
+ **/
+var store = function(state) {
+  var addr  = state.valStack.pop(),
+      value = state.valStack.pop();
+
+  if (addr >= 0 && addr <= 127) {
+    state.sysvars[addr] = value;
+  }
+};
+
+/**
  * Compares top two values of the value stack [a, b] and pushes the result (a > b) to the
  * boolStack.
  **/
@@ -182,25 +195,36 @@ var parseSysvar = function(code) {
  * executes the operation.
  **/
 var stackOp = function(code) {
-  var lit = literal(code);
+  var lit, sysVar;
+
+  lit = literal(code);
   if (lit !== undefined) {
     return lit;
   }
 
-  if (code.match(/add/)) {
+  sysVar = parseSysvar(code);
+  if (sysVar !== undefined) {
+    return sysVar;
+  }
+
+  if (code === "add") {
     return add;
   }
 
-  if (code.match(/sub/)) {
+  if (code === "sub") {
     return sub;
   }
 
-  if (code.match(/mul/)) {
+  if (code === "mul") {
     return mul;
   }
 
-  if (code.match(/div/)) {
+  if (code === "div") {
     return div;
+  }
+
+  if (code === "store") {
+    return store;
   }
 
   return undefined;
