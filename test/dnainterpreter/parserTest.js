@@ -1,12 +1,86 @@
 var parser = require('../../src/dnainterpreter/parser.js');
 
+var condBlocks = {
+  validBlock          : ["cond", "1", "2", ">", "3", "2", "1", "add", "=", "start"],
+  invalidStart        : ["1", "2", ">", "start"],
+  unexpectedEof       : ["cond", "1", "2", ">"],
+  invalidContinuation : ["cond", "1", "2", ">", "cond"],
+  validEndBlock       : ["cond", "1", "2", "end"],
+  validNoOpBlock      : ["cond", "1", "2", ">", "stop"],
+  validEmptyBlock     : ["start", "1", "2", "add"]
+};
+
+module.exports.testCondBlock = {
+  testValidEmptyBlock : function(test) {
+    var block = parser.condBlock(condBlocks.validEmptyBlock);
+
+    test.ok(block, "block should be a function");
+    test.equals(condBlocks.validEmptyBlock[0], "1", "start should be stripped from token stream");
+    test.done();
+  },
+
+  testValidEndBlock : function(test) {
+    var block = parser.condBlock(condBlocks.validEndBlock);
+
+    test.equals(block, undefined, "premature end should result in a no-op");
+    test.equals(condBlocks.validEndBlock[0], "end", "End token should be all that remains in token stream");
+    test.done();
+  },
+
+  testValidNoOpBlock : function(test) {
+    var block = parser.condBlock(condBlocks.validNoOpBlock);
+
+    test.equals(block, undefined, "stop token should result in a no-op");
+    test.equals(condBlocks.validNoOpBlock.length, 0, "all tokens should be consumed");
+    test.done();
+  },
+
+  testValidBlock : function(test) {
+    var block = parser.condBlock(condBlocks.validBlock),
+        state = parser.createState();
+
+    test.equals(condBlocks.validBlock.length, 0, "condBlock did not consume all tokens when parsing");
+    test.ok(block, "block was not processed properly");
+    block(state);
+
+    test.equals(state.boolStack.length(), 2, "both conditional statements should leave values on the stack");
+    test.equals(state.valStack.length(), 0, "all values should have been used");
+    test.ok(state.boolStack.pop(), "second conditional should be true");
+    test.ok(!state.boolStack.pop(), "first conditional should be false");
+    test.done();
+  },
+
+  testInvalidStart : function(test) {
+    var block = parser.condBlock(condBlocks.invalidStart);
+
+    test.equals(block, undefined, "Block should be undefined");
+    test.done();
+  },
+
+  testUnexpectedEof : function(test) {
+    var block = parser.condBlock(condBlocks.unexpectedEof);
+
+    test.equals(block, undefined, "UnexpectedEof should result in a no-op");
+    test.done();
+  },
+
+  testInvalidContinuation : function(test) {
+    var block = parser.condBlock(condBlocks.invalidContinuation);
+
+    test.equals(block, undefined, "InvalidContinuation should be undefined");
+    test.equals(condBlocks.invalidContinuation.length, 1, "second cond token should remain in stream");
+    test.equals(condBlocks.invalidContinuation[0], "cond", "second cond token should remain in stream");
+    test.done();
+  },
+};
+
+
 module.exports.testCondExpr = function(test) {
   var stackOp = parser.condExpr("5"),
       boolOp  = parser.condExpr(">"),
       noOp    = parser.condExpr("start"),
       state   = parser.createState();
 
-  test.expect(4);
   test.ok(stackOp, "StackOp expected to return a function");
   test.ok(boolOp, "BoolOp expected to return a function");
   test.equals(noOp, undefined, "noOp expected to be undefined");
@@ -21,7 +95,6 @@ module.exports.testCondExpr = function(test) {
 var boolTest = function(test, op, paramArray) {
   var boolOp = parser.boolOp(op);
 
-  test.expect(1 + paramArray.length);
   test.ok(boolOp, "Expected boolOp, " + op + ", to be a function");
 
   paramArray.forEach(function(testObj) {
@@ -132,8 +205,6 @@ module.exports.testLiteral = function(test) {
   };
   var state = parser.createState();
 
-  test.expect(3);
-
   parser.literal(strings.valid)(state);
 
   test.equals(state.valStack.length(), 1, "Value not pushed to the stack");
@@ -160,28 +231,24 @@ var binOpTest = function(test, stackVals, op, value) {
 
 module.exports.testStackOp = {
   testAdd : function(test) {
-    test.expect(4);
     binOpTest(test, [2, 10], "add", 12);
     binOpTest(test, [], "add", 0);
     test.done();
   },
 
   testSub : function(test) {
-    test.expect(4);
     binOpTest(test, [2, 10], "sub", -8);
     binOpTest(test, [], "sub", 0);
     test.done();
   },
 
   testMul : function(test) {
-    test.expect(4);
     binOpTest(test, [2, 10], "mul", 20);
     binOpTest(test, [], "mul", 0);
     test.done();
   },
 
   testDiv : function(test) {
-    test.expect(6);
     binOpTest(test, [2, 10], "div", 0);
     binOpTest(test, [10, 2], "div", 5);
     binOpTest(test, [], "div", 0);
@@ -189,23 +256,69 @@ module.exports.testStackOp = {
   },
 
   testUnknown : function(test) {
-    test.expect(1);
     test.equals(parser.stackOp("aoeu"), undefined, "Unknown stack-ops should be unknown");
     test.done();
   }
 };
 
-module.exports.testBody = function(test) {
-  var state = parser.createState();
-  var code  = ["1", "2", "add", "5", "3", "mul", "sub", "stop"];
-
-  parser.body(code)(state);
-
-  test.expect(2);
-  test.equals(state.valStack.length(), 1, "Stack should only have a length of 1 after this body executes");
-  test.equals(state.valStack.pop(), -12, "First stack value should be -12");
-  test.done();
+var bodyBlocks = {
+  validBlock    : ["1", "2", "add", "5", "3", "mul", "sub", "stop"],
+  prematureEnd  : ["1", "end"],
+  prematureCond : ["1", "2", "mul", "cond", "<"],
+  prematureBody : ["1", "2", "start"],
+  prematureEof  : ["1", "2", "add"]
 };
+
+module.exports.testBody = {
+  testPrematureEof : function(test) {
+    var block = parser.body(bodyBlocks.prematureEof);
+
+    test.ok(block, "block should be a valid function");
+    test.done();
+  },
+
+  testPrematureBody : function(test) {
+    var block = parser.body(bodyBlocks.prematureBody);
+
+    test.ok(block, "block should be a valid function");
+    test.equals(bodyBlocks.prematureBody[0], "start");
+    test.done();
+  },
+
+  testPrematureCond : function(test) {
+    var block = parser.body(bodyBlocks.prematureCond);
+
+    test.ok(block, "block should be a valid function");
+    test.equals(bodyBlocks.prematureCond[0], "cond");
+    test.done();
+  },
+
+  testValidBlock : function(test) {
+    var state = parser.createState();
+
+    parser.body(bodyBlocks.validBlock)(state);
+
+    test.equals(state.valStack.length(), 1, "Stack should only have a length of 1 after this body executes");
+    test.equals(state.valStack.pop(), -12, "First stack value should be -12");
+    test.done();
+  },
+
+  testPrematureEnd : function(test) {
+    var block = parser.body(bodyBlocks.prematureEnd),
+        state = parser.createState();
+
+    test.ok(block, "body should be processed without issue");
+
+    block(state);
+    test.equals(state.valStack.stack[0], 1,
+      "value stack should hold last op's value: 1 expceted but " + state.valStack[0] + " found");
+    test.done();
+  }
+};
+
+
+
+
 
 
 

@@ -180,24 +180,25 @@ var stackOp = function(code) {
  * the "start" string).
  **/
 var body = function(tokenList) {
-  var getNextToken = (function() {
-    var index = 0;
-    return function() {
-      if (index >= tokenList.length) {
-        return "";
-      }
-      var curIdx = index;
-      index += 1;
-      return tokenList[curIdx];
-    };
-  }());
-  var ops = [];
+  var ops   = [],
+      op    = {},
+      opStr = "";
 
-  var op = stackOp(getNextToken());
-  while(op !== undefined) {
+  opStr = tokenList.shift();
+  op    = stackOp(opStr);
+  while(op !== undefined && tokenList.length > 0) {
     ops.push(op);
-    op = stackOp(getNextToken());
+
+    opStr = tokenList.shift();
+    op    = stackOp(opStr);
   }
+
+  // If we hit a premature "cond" or "start" then push the token back into the stream
+  // for consumption later.
+  if (opStr === "cond" || opStr === "start") {
+    tokenList.unshift(opStr);
+  }
+
 
   return function(state) {
     ops.forEach(function(op) {
@@ -249,13 +250,74 @@ var condExpr = function(code) {
   return op;
 };
 
+var condBlock = function(tokenList) {
+  var exprStr   = "",
+      expr      = {},
+      condExprs = [];
+
+  exprStr = tokenList.shift();
+
+  if (exprStr !== "cond") {
+    if (exprStr === "start") {
+      return function() {
+        /* do nothing, there are no conditions */
+        return;
+      };
+    }
+    return undefined;
+  }
+
+  exprStr = tokenList.shift();
+  expr    = condExpr(exprStr);
+  while(expr !== undefined && tokenList.length > 0) {
+    condExprs.push(expr);
+
+    exprStr = tokenList.shift();
+    expr    = condExpr(exprStr);
+  }
+
+  // if code is malformed so that this cond runs into another,
+  // then this cond is a no-op and the next cond token should
+  // be returned to the stream.
+  if (exprStr === "cond") {
+    tokenList.unshift(exprStr);
+    return undefined;
+  }
+
+  // This token stream runs into a stop command without a body
+  // so no point in evaluating the cond block.
+  if (exprStr === "stop") {
+    return undefined;
+  }
+
+  // This token stream hits a premature end. Push the end token
+  // in case someone is interested in it then return a no-op.
+  if (exprStr === "end") {
+    tokenList.unshift(exprStr);
+    return undefined;
+  }
+
+  // Ran out of tokens before we hit a terminating condition
+  // so return undefined.
+  if (exprStr !== "start" && tokenList.length === 0) {
+    return undefined;
+  }
+
+  return function(state) {
+    condExprs.forEach(function(expr) {
+      expr(state);
+    });
+  };
+};
+
 module.exports = {
   literal     : literal,
   stackOp     : stackOp,
   body        : body,
   createState : createState,
   boolOp      : boolOp,
-  condExpr    : condExpr
+  condExpr    : condExpr,
+  condBlock   : condBlock
 };
 
 
