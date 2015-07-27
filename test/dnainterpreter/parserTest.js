@@ -1,4 +1,5 @@
-var parser = require('../../src/dnainterpreter/parser.js');
+var parser      = require('../../src/dnainterpreter/parser.js'),
+    sysvarNames = require('../../src/constants/sysvarNames.js');
 
 
 var geneBlocks = {
@@ -392,12 +393,37 @@ module.exports.testBody = {
 };
 
 var sysvarStrings = {
-  addr      : ".10",
-  val       : "*.10",
-  malformed : "10"
+  addr           : ".10",
+  val            : "*.10",
+  malformed      : "10",
+  sysvarNameAddr : ".up",
+  sysvarNameVal  : "*.up"
 };
 
 module.exports.testSysvars = {
+  readNamedSysvarAddr : function(test) {
+    var varcmd = parser.parseSysvar(sysvarStrings.sysvarNameAddr),
+        state  = parser.createState();
+
+    test.ok(varcmd, "Sysvar name should parse into a function");
+    varcmd(state);
+
+    test.equals(state.valStack.pop(), sysvarNames.get("up"), "Address of sysvar should be pushed");
+    test.done();
+  },
+
+  readNamedSysvarValue : function(test) {
+    var varcmd = parser.parseSysvar(sysvarStrings.sysvarNameVal),
+        state  = parser.createState();
+
+    test.ok(varcmd, "sysvar name should parse into function");
+    state.sysvars[sysvarNames.get("up")] = 100;
+    varcmd(state);
+
+    test.equals(state.valStack.pop(), 100, "sysvar value should be pushed onto stack");
+    test.done();
+  },
+
   pushSysvarAddr : function(test) {
     var varcmd = parser.parseSysvar(sysvarStrings.addr),
         state  = parser.createState();

@@ -1,4 +1,5 @@
-var createStack = require('../util/stack.js');
+var createStack = require('../util/stack.js'),
+    sysvarNames = require('../constants/sysvarNames.js');
 
 /**
  * Adds the top two values of the stack and pushes the result.
@@ -165,11 +166,19 @@ var literal = function(code) {
  * onto the stack.
  **/
 var parseSysvar = function(code) {
-  var addr = 0;
+  var addr = 0,
+      getSysvarAddr = function(addrStr) {
+        var parsedAddr = sysvarNames.get(addrStr);
+        if (parsedAddr === undefined) {
+          return parseInt(addrStr, 10);
+        }
+
+        return parsedAddr;
+      };
 
   if (code[0] === ".") {
     // this may not parse as an int, check for sysvars
-    addr = parseInt(code.slice(1), 10);
+    addr = getSysvarAddr(code.slice(1));
     if (!isNaN(addr)) {
       return function(state) {
         state.valStack.push(addr);
@@ -179,7 +188,7 @@ var parseSysvar = function(code) {
   }
 
   if (code[0] === "*" && code[1] === ".") {
-    addr = parseInt(code.slice(2), 10);
+    addr = getSysvarAddr(code.slice(2));
     if (!isNaN(addr)) {
       return function(state) {
         state.valStack.push(state.sysvars[addr] || 0);

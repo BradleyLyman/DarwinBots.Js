@@ -19,5 +19,8 @@
   "devDependencies": {
     "diveSync": "^0.3.0",
     "nodeunit": "^0.9.1"
+  },
+  "dependencies": {
+    "immutable": "^3.7.4"
   }
 }
