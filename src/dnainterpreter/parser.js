@@ -125,7 +125,8 @@ var lessOrEqual = function(state) {
 var createState = function() {
   return {
     valStack  : createStack(0, 20),
-    boolStack : createStack(true, 20)
+    boolStack : createStack(true, 20),
+    sysvars   : {}
   };
 };
 
@@ -141,6 +142,38 @@ var literal = function(code) {
       state.valStack.push(result);
     };
   }
+  return undefined;
+};
+
+/**
+ * Parses the given string as a sysvar.
+ * If the string starts with *. then the _value_ of the sysvar is pushed
+ * onto the stack, otherwise the _address_ of the sysvar is pushed
+ * onto the stack.
+ **/
+var parseSysvar = function(code) {
+  var addr = 0;
+
+  if (code[0] === ".") {
+    // this may not parse as an int, check for sysvars
+    addr = parseInt(code.slice(1), 10);
+    if (!isNaN(addr)) {
+      return function(state) {
+        state.valStack.push(addr);
+      };
+    }
+    return undefined;
+  }
+
+  if (code[0] === "*" && code[1] === ".") {
+    addr = parseInt(code.slice(2), 10);
+    if (!isNaN(addr)) {
+      return function(state) {
+        state.valStack.push(state.sysvars[addr] || 0);
+      };
+    }
+  }
+
   return undefined;
 };
 
@@ -371,7 +404,8 @@ module.exports = {
   condExpr    : condExpr,
   condBlock   : condBlock,
   gene        : gene,
-  parseDna    : parseDna
+  parseDna    : parseDna,
+  parseSysvar : parseSysvar
 };
 
 

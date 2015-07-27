@@ -1,5 +1,6 @@
 var parser = require('../../src/dnainterpreter/parser.js');
 
+
 var geneBlocks = {
   condTrue     : ["cond", "1", "2", "<", "start", "4", "stop"],
   condFalse    : ["cond", "1", "2", ">", "start", "4", "stop"],
@@ -367,6 +368,47 @@ module.exports.testBody = {
     block(state);
     test.equals(state.valStack.stack[0], 1,
       "value stack should hold last op's value: 1 expceted but " + state.valStack[0] + " found");
+    test.done();
+  }
+};
+
+var sysvarStrings = {
+  addr      : ".10",
+  val       : "*.10",
+  malformed : "10"
+};
+
+module.exports.testSysvars = {
+  pushSysvarAddr : function(test) {
+    var varcmd = parser.parseSysvar(sysvarStrings.addr),
+        state  = parser.createState();
+
+    test.ok(varcmd, "Sysvar addr should parse into a function");
+    varcmd(state);
+
+    test.equals(state.valStack.pop(), 10, "Addr command should push sysvar address to stack");
+    test.done();
+  },
+
+  pushSysvarVal : function(test) {
+    var varcmd = parser.parseSysvar(sysvarStrings.val),
+        state  = parser.createState();
+
+    test.ok(varcmd, "Sysvar val should parse into function");
+    varcmd(state);
+
+    test.equals(state.valStack.pop(), 0, "uninitialized sysvar should read as 0");
+    state.sysvars[10] = 1000;
+
+    varcmd(state);
+    test.equals(state.valStack.pop(), 1000, "sysvar's value should be pushed to the valstack");
+    test.done();
+  },
+
+  malformedSysvar : function(test) {
+    var varcmd = parser.parseSysvar(sysvarStrings.malformed);
+
+    test.equals(varcmd, undefined, "malformed sysvar should not parse into a function");
     test.done();
   }
 };
