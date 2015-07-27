@@ -179,7 +179,7 @@ var stackOp = function(code) {
  * Returns undefined if this is a invalid body segment (e.g. does not start with
  * the "start" string).
  **/
-var body = function(tokenList) {
+var bodyBlock = function(tokenList) {
   var ops   = [],
       op    = {},
       opStr = "";
@@ -310,14 +310,46 @@ var condBlock = function(tokenList) {
   };
 };
 
+var gene = function(tokenList) {
+  var cond = condBlock(tokenList);
+
+  while(cond === undefined && tokenList.length > 0 && tokenList[0] !== "end") {
+    cond = condBlock(tokenList);
+  }
+
+  if (cond === undefined) {
+    return undefined;
+  }
+
+  var body = bodyBlock(tokenList);
+  if (body === undefined) {
+    return undefined;
+  }
+
+  return function(state) {
+    var execute = false;
+
+    cond(state);
+
+    execute = state.boolStack.stack.reduce(function(prev, cur) {
+      return prev && cur;
+    }, true);
+
+    if (execute) {
+      body(state);
+    }
+  };
+};
+
 module.exports = {
   literal     : literal,
   stackOp     : stackOp,
-  body        : body,
+  body        : bodyBlock,
   createState : createState,
   boolOp      : boolOp,
   condExpr    : condExpr,
-  condBlock   : condBlock
+  condBlock   : condBlock,
+  gene        : gene
 };
 
 

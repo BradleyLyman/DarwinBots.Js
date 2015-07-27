@@ -1,5 +1,60 @@
 var parser = require('../../src/dnainterpreter/parser.js');
 
+var geneBlocks = {
+  condTrue     : ["cond", "1", "2", "<", "start", "4", "stop"],
+  condFalse    : ["cond", "1", "2", ">", "start", "4", "stop"],
+  lateCond     : ["1", "cond", "1", "2", "<", "start", "4", "stop"],
+  end          : ["5", "100", "add", "end"],
+  prematureEof : ["1", "add", "stop", "mul"]
+};
+
+module.exports.testGene = {
+  prematureEof : function(test) {
+    var gene = parser.gene(geneBlocks.prematureEof);
+
+    test.equals(geneBlocks.prematureEof.length, 0, "should consume entire token stream");
+    test.equals(gene, undefined, "premature eof should stop gene search");
+    test.done();
+  },
+
+  testEndFound : function(test) {
+    var gene = parser.gene(geneBlocks.end);
+
+    test.equals(gene, undefined, "reaching end of file should stop gene search");
+    test.done();
+  },
+
+  testLateCond : function(test) {
+    var gene = parser.gene(geneBlocks.lateCond);
+    test.ok(gene);
+    test.done();
+  },
+
+  testCondTrue : function(test) {
+    var gene  = parser.gene(geneBlocks.condTrue),
+        state = parser.createState();
+
+    test.ok(gene);
+
+    gene(state);
+
+    test.equals(state.valStack.stack[0], 4, "body should have executed");
+    test.done();
+  },
+
+  testCondFalse : function(test) {
+    var gene = parser.gene(geneBlocks.condFalse),
+        state = parser.createState();
+
+    test.ok(gene);
+
+    gene(state);
+
+    test.equals(state.valStack.stack.length, 0, "body should not have executed");
+    test.done();
+  }
+};
+
 var condBlocks = {
   validBlock          : ["cond", "1", "2", ">", "3", "2", "1", "add", "=", "start"],
   invalidStart        : ["1", "2", ">", "start"],
