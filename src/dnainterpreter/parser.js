@@ -40,6 +40,49 @@ module.exports = {
     });
   },
 
+  /**
+   * Parses the token's value for a sysvar's value.
+   * Returns:
+   *   Result object, if an error is present then parsing failed.
+   *   Otherwise result will be a function which return's the sysvar's
+   *   value.
+   *   function(sysvars) { return sysvar; }
+   **/
+  parseSysvar : function(token) {
+    var addr = 0;
+
+    if (token.value[0] !== "*" || token.value[1] !== ".") {
+      return _createError(token);
+    }
+
+    addr = token.value.slice(2);
+
+    return _createSuccess(function(sysvars) {
+      return sysvars[addr] || 0;
+    });
+  },
+
+  /**
+   * Parses the token's value for a sysvar's name.
+   * Returns:
+   *   Result object, if an error is present then parsing failed.
+   *   Otherwise result will be a function which returns the sysvar's
+   *   value.
+   *   function() { return name; }
+   **/
+  parseSysvarAddr : function(token) {
+    var addr;
+
+    if (token.value[0] !== ".") {
+      return _createError(token);
+    }
+
+    addr = token.value.slice(1);
+
+    return _createSuccess(function() {
+      return addr;
+    });
+  }
 };
 
 
