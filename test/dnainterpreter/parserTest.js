@@ -16,7 +16,7 @@ module.exports.testParseNumber = {
     var result = parser.parseNumber(Token("aoeu"));
 
     test.ok(result.error, "Error expected");
-    test.equals(result.error.payload.lineNum, 5, "Expected result payload to contain token");
+    test.equals(result.error.lineNum, 5, "Expected result payload to contain token");
     test.done();
   }
 };

@@ -3,8 +3,8 @@
  * Returns:
  *   Object with the error value set to payload.
  **/
-var _createError = function(message, payload) {
-  return { error : { message: message, payload: payload } };
+var _createError = function(payload) {
+  return { error : payload };
 };
 
 /**
@@ -27,17 +27,19 @@ module.exports = {
    *   Result object, if an error is present then parsing failed,
    *   otherwise result will be a function which returts the number's
    *   value.
+   *   function() { return number; }
    **/
   parseNumber : function(token) {
     var number = parseInt(token.value, 10);
     if (isNaN(number)) {
-      return _createError("Could not parse number on line " + token.lineNum, token);
+      return _createError(token);
     }
 
     return _createSuccess(function() {
       return number;
     });
-  }
+  },
+
 };
 
 
