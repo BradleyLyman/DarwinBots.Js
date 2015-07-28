@@ -1,129 +1,195 @@
-var createStack = require('../util/stack.js'),
-    sysvarNames = require('../constants/sysvarNames.js');
+var sysvarNames = require('../constants/sysvarNames.js'),
+    Immutable   = require('immutable');
 
 /**
- * Adds the top two values of the stack and pushes the result.
+ * Pops the first two values from the top of the stack.
+ * Returns the updated stack and the two values as an object.
  **/
-var add = function(state) {
-  var res = state.valStack.pop() + state.valStack.pop();
-  state.valStack.push(res);
+var _popTopTwoValues = function(stack) {
+  var a, b, aStack, bStack;
+  b      = stack.peek();
+  bStack = stack.shift();
+  a      = bStack.peek();
+  aStack = bStack.shift();
+
+  return {
+    a : a,
+    b : b,
+    stack : aStack
+  };
 };
 
 /**
- * Multiplies the top two values of the stack and pushes the result.
+ * Pulls the first two values from the top of the stack and
+ * passes them in order to the callback function.
+ * Params:
+ *   stack    -- Immutable.js Stack
+ *   operator -- function(a, b) {}
+ * Return:
+ *   The stack with a and b popped and the operator's return value pushed.
  **/
-var mul = function(state) {
-  var res = state.valStack.pop() * state.valStack.pop();
-  state.valStack.push(res);
+var _valueStackBinaryOp = function(state, operator) {
+  var res          = _popTopTwoValues(state.get("valueStack")),
+      updatedStack = res.stack.unshift(operator(res.a || 0, res.b || 0));
+
+  return state.set("valueStack", updatedStack);
 };
 
 /**
- * Divides the top two values of the stack where given the stack: [a, b]
- * the result is a / b.
+ * Adds the top values of the valueStack and pushes the result to the valueStack.
+ * (a b add) === (a + b)
+ * Returns:
+ *   Updated state Map.
+ **/
+var _add = function(state) {
+  return _valueStackBinaryOp(state, function(a, b) {
+    return a + b;
+  });
+};
+
+/**
+ * Multiplies the top values of the valueStack and pushes the result to the valueStack.
+ * Returns:
+ *   Updated state Map.
+ **/
+var _mul = function(state) {
+  return _valueStackBinaryOp(state, function(a, b) {
+    return a * b;
+  });
+};
+
+/**
+ * Divides the top two values of the valueStack and pushes the result to the valueStack.
  * Divide-by-zero results in a value of 0.0.
- * Result is pushed to the stack.
+ * (a b div) === a / b
+ * Returns:
+ *   Updated state Map.
  **/
-var div = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
+var _div = function(state) {
+  return _valueStackBinaryOp(state, function(a, b) {
+    if (b === 0) {
+      return 0;
+    }
 
-  if ( b === 0 ) {
-    state.valStack.push(0);
-  }
-  else {
-    state.valStack.push(Math.round(a / b));
-  }
+    return Math.round(a / b);
+  });
 };
 
 /**
- * Subtracts the top two values of the stack where given the stack: [a, b]
- * the result is a - b.
- * Result is pushed to stack.
+ * Subtracts the top two values of the valueStack and pushes the result to the valueStack.
+ * (a b sub) === a - b
+ * Returns:
+ *   Updated state Map.
  **/
-var sub = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.valStack.push(a - b);
+var _sub = function(state) {
+  return _valueStackBinaryOp(state, function(a, b) {
+    return a - b;
+  });
 };
 
 /**
  * Stores a value in a sysvar. Top stack value is sysvar address, second stack value
  * is the value to store. Does nothing if sysvar address is out of the range [0-127].
+ * (val addr store) === stores val in addr for sysvar
+ * Returns:
+ *   Updated state Map.
  **/
-var store = function(state) {
-  var addr  = state.valStack.pop(),
-      value = state.valStack.pop();
+var _store = function(state) {
+  var res          = _popTopTwoValues(state.get("valueStack")),
+      updatedState = state.set("valueStack", res.stack),
+      updatedSysvars;
 
-  if (addr >= 0 && addr <= 127) {
-    state.sysvars[addr] = value;
+  if (res.b >= 0 && res.b <= 127) {
+    updatedSysvars = updatedState.get("sysvars").set(res.b, res.a);
+    return updatedState.set("sysvars", updatedSysvars);
   }
+  return updatedState;
 };
 
 /**
- * Compares top two values of the value stack [a, b] and pushes the result (a > b) to the
- * boolStack.
+ * Pops top two values of the value stack, passes them to operation, and
+ * pushes operation's result to the boolStack.
+ * Returns:
+ *   Updated state Map.
  **/
-var greaterThan = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
+var _boolStackBinaryOp = function(state, operation) {
+  var res              = _popTopTwoValues(state.get("valueStack")),
+      updatedState     = state.set("valueStack", res.stack),
+      updatedBoolStack = updatedState.get("boolStack").unshift(operation(res.a, res.b));
 
-  state.boolStack.push(a > b);
+  return updatedState.set("boolStack", updatedBoolStack);
+};
+
+/**
+ * Compares top two values of the valueStack [a, b] and pushes the result (a > b) to the
+ * boolStack.
+ * Returns:
+ *   Updated state Map.
+ **/
+var _greaterThan = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a > b;
+  });
 };
 
 /**
  * Compares top two values of the value stack [a, b] and pushes the result (a < b) to the
  * boolStack.
+ * Returns:
+ *   Updated state Map.
  **/
-var lessThan = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.boolStack.push(a < b);
+var _lessThan = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a < b;
+  });
 };
 
 /**
  * Compares top two values of the value stack [a, b] and pushes the result (a === b) to the
  * boolStack.
+ * Returns;
+ *   Updated state Map.
  **/
-var equalTo = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.boolStack.push(a === b);
+var _equalTo = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a === b;
+  });
 };
 
 /**
  * Compares top two values of the value stack [a, b] and pushes the result (a !== b) to the
  * boolStack.
+ * Returns:
+ *   Updated state Map.
  **/
-var notEqualTo = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.boolStack.push(a !== b);
+var _notEqualTo = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a !== b;
+  });
 };
 
 /**
  * Compares top two values of the value stack [a, b] and pushes the result (a >= b) to the
  * boolStack.
+ * Returns:
+ *   Updated state Map.
  **/
-var greaterOrEqual = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.boolStack.push(a >= b);
+var _greaterOrEqual = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a >= b;
+  });
 };
 
 /**
  * Compares top two values of the value stack [a, b] and pushes the result (a <= b) to the
  * boolStack.
+ * Returns:
+ *   Updated state Map.
  **/
-var lessOrEqual = function(state) {
-  var b = state.valStack.pop();
-  var a = state.valStack.pop();
-
-  state.boolStack.push(a <= b);
+var _lessOrEqual = function(state) {
+  return _boolStackBinaryOp(state, function(a, b) {
+    return a <= b;
+  });
 };
 
 
@@ -134,14 +200,32 @@ var lessOrEqual = function(state) {
  **/
 
 /**
- * Creates an instance of the bot state used by parser's output.
+ * Adds a valueStack, a boolStack, and a sysvars map to the provided state Map.
+ * Params:
+ *   state -- Immutable map representing the bot's state. Creates a new map if
+ *            none is provided.
+ * Returns:
+ *   Immutable Map representing the bot's state, with a valueStack, a boolStack, and
+ *   a sysvars Map if none already existed.
  **/
-var createState = function() {
-  return {
-    valStack  : createStack(0, 20),
-    boolStack : createStack(true, 20),
-    sysvars   : {}
-  };
+var createState = function(state) {
+  var updatedState = state || Immutable.Map(),
+      defaultState = Immutable.Map({
+        valueStack : Immutable.Stack(),
+        boolStack  : Immutable.Stack(),
+        sysvars    : Immutable.Map()
+      });
+  return updatedState.mergeDeep(defaultState);
+};
+
+/**
+ * Pushes the given value onto the valueStack and returns the updated
+ * state object.
+ **/
+var _pushValueStack = function(state, value) {
+  var updatedStack = state.get("valueStack").unshift(value);
+
+  return state.set("valueStack", updatedStack);
 };
 
 /**
@@ -149,11 +233,11 @@ var createState = function() {
  * If the literal is valid then returns a function which pushes the literal unto the stack.
  * Otherwise returns undefined.
  **/
-var literal = function(code) {
+var parseLiteral = function(code) {
   var result = parseInt(code, 10);
   if (!isNaN(result)) {
     return function(state) {
-      state.valStack.push(result);
+      return _pushValueStack(state, result);
     };
   }
   return undefined;
@@ -181,7 +265,7 @@ var parseSysvar = function(code) {
     addr = getSysvarAddr(code.slice(1));
     if (!isNaN(addr)) {
       return function(state) {
-        state.valStack.push(addr);
+        return _pushValueStack(state, addr);
       };
     }
     return undefined;
@@ -191,7 +275,8 @@ var parseSysvar = function(code) {
     addr = getSysvarAddr(code.slice(2));
     if (!isNaN(addr)) {
       return function(state) {
-        state.valStack.push(state.sysvars[addr] || 0);
+        return _pushValueStack(state,
+          state.get("sysvars").get(addr) || 0);
       };
     }
   }
@@ -203,10 +288,10 @@ var parseSysvar = function(code) {
  * Parses the given string as a StackOp and returns a function which
  * executes the operation.
  **/
-var stackOp = function(code) {
+var parseStackOp = function(code) {
   var lit, sysVar;
 
-  lit = literal(code);
+  lit = parseLiteral(code);
   if (lit !== undefined) {
     return lit;
   }
@@ -217,23 +302,23 @@ var stackOp = function(code) {
   }
 
   if (code === "add") {
-    return add;
+    return _add;
   }
 
   if (code === "sub") {
-    return sub;
+    return _sub;
   }
 
   if (code === "mul") {
-    return mul;
+    return _mul;
   }
 
   if (code === "div") {
-    return div;
+    return _div;
   }
 
   if (code === "store") {
-    return store;
+    return _store;
   }
 
   return undefined;
@@ -245,18 +330,18 @@ var stackOp = function(code) {
  * Returns undefined if this is a invalid body segment (e.g. does not start with
  * the "start" string).
  **/
-var bodyBlock = function(tokenList) {
+var parseBodyBlock = function(tokenList) {
   var ops   = [],
       op    = {},
       opStr = "";
 
   opStr = tokenList.shift();
-  op    = stackOp(opStr);
+  op    = parseStackOp(opStr);
   while(op !== undefined && tokenList.length > 0) {
     ops.push(op);
 
     opStr = tokenList.shift();
-    op    = stackOp(opStr);
+    op    = parseStackOp(opStr);
   }
 
   // If we hit a premature "cond" or "start" then push the token back into the stream
@@ -267,9 +352,9 @@ var bodyBlock = function(tokenList) {
 
 
   return function(state) {
-    ops.forEach(function(op) {
-      op(state);
-    });
+    return ops.reduce(function(prevState, op) {
+      return op(prevState);
+    }, state);
   };
 };
 
@@ -277,46 +362,46 @@ var bodyBlock = function(tokenList) {
  * Parses the code-point as a BoolOp. If parsing is successful then
  * returns a function which computes the bool op, else returns undefined.
  **/
-var boolOp = function(code) {
+var parseBoolOp = function(code) {
   if (code.length > 2) { return undefined; } // quick check
 
   if (code === ">") {
-    return greaterThan;
+    return _greaterThan;
   }
 
   if (code === "<") {
-    return lessThan;
+    return _lessThan;
   }
 
   if (code === "=") {
-    return equalTo;
+    return _equalTo;
   }
 
   if (code === "!=") {
-    return notEqualTo;
+    return _notEqualTo;
   }
 
   if (code === ">=") {
-    return greaterOrEqual;
+    return _greaterOrEqual;
   }
 
   if (code === "<=") {
-    return lessOrEqual;
+    return _lessOrEqual;
   }
 
   return undefined;
 };
 
-var condExpr = function(code) {
-  var op = boolOp(code);
+var parseCondExpr = function(code) {
+  var op = parseBoolOp(code);
   if (op === undefined) {
-    return stackOp(code);
+    return parseStackOp(code);
   }
 
   return op;
 };
 
-var condBlock = function(tokenList) {
+var parseCondBlock = function(tokenList) {
   var exprStr   = "",
       expr      = {},
       condExprs = [];
@@ -334,12 +419,12 @@ var condBlock = function(tokenList) {
   }
 
   exprStr = tokenList.shift();
-  expr    = condExpr(exprStr);
+  expr    = parseCondExpr(exprStr);
   while(expr !== undefined && tokenList.length > 0) {
     condExprs.push(expr);
 
     exprStr = tokenList.shift();
-    expr    = condExpr(exprStr);
+    expr    = parseCondExpr(exprStr);
   }
 
   // if code is malformed so that this cond runs into another,
@@ -370,75 +455,85 @@ var condBlock = function(tokenList) {
   }
 
   return function(state) {
-    condExprs.forEach(function(expr) {
-      expr(state);
-    });
+    return condExprs.reduce(function(prevState, expr) {
+      return expr(prevState);
+    }, state);
   };
 };
 
-var gene = function(tokenList) {
-  var cond = condBlock(tokenList);
+var parseGene = function(tokenList) {
+  var cond = parseCondBlock(tokenList);
 
   while(cond === undefined && tokenList.length > 0 && tokenList[0] !== "end") {
-    cond = condBlock(tokenList);
+    cond = parseCondBlock(tokenList);
   }
 
   if (cond === undefined) {
     return undefined;
   }
 
-  var body = bodyBlock(tokenList);
+  var body = parseBodyBlock(tokenList);
   if (body === undefined) {
     return undefined;
   }
 
   return function(state) {
-    var execute = false;
+    var execute = false,
+        postCondState;
 
-    cond(state);
+    postCondState = cond(state);
 
-    execute = state.boolStack.stack.reduce(function(prev, cur) {
-      return prev && cur;
+    execute = postCondState.get("boolStack").reduce(function(total, val) {
+      return total & val;
     }, true);
 
     if (execute) {
-      body(state);
+      return body(postCondState);
     }
+
+    return postCondState;
   };
 };
 
+/**
+ * Clears the value and bool stacks. Returns the updated state.
+ **/
+var _clearStacks = function(state) {
+  var clearedValueStack = state.get("valueStack").clear(),
+      clearedBoolStack  = state.get("boolStack").clear(),
+      updatedState      = state.set("valueStack", clearedValueStack);
+
+  return updatedState.set("boolStack", clearedBoolStack);
+};
+
 var parseDna = function(tokenList) {
-  var geneBlock  = gene(tokenList),
+  var geneBlock  = parseGene(tokenList),
       genes = [];
 
   while(geneBlock !== undefined) {
     genes.push(geneBlock);
 
-    geneBlock = gene(tokenList);
+    geneBlock = parseGene(tokenList);
   }
 
   return function(state) {
-    genes.forEach(function(geneBlock) {
-      // flush state before each gene is executed
-      state.valStack.stack  = [];
-      state.boolStack.stack = [];
-
-      geneBlock(state);
-    });
+    return genes.reduce(function(prevState, geneBlock) {
+      return geneBlock(_clearStacks(prevState));
+    }, state);
   };
 };
 
 module.exports = {
-  literal     : literal,
-  stackOp     : stackOp,
-  body        : bodyBlock,
-  createState : createState,
-  boolOp      : boolOp,
-  condExpr    : condExpr,
-  condBlock   : condBlock,
-  gene        : gene,
-  parseDna    : parseDna,
-  parseSysvar : parseSysvar
+  parseLiteral   : parseLiteral,
+  parseStackOp   : parseStackOp,
+  parseBody      : parseBodyBlock,
+  createState    : createState,
+  parseBoolOp    : parseBoolOp,
+  parseCondExpr  : parseCondExpr,
+  parseCondBlock : parseCondBlock,
+  parseGene      : parseGene,
+  parseDna       : parseDna,
+  parseSysvar    : parseSysvar
 };
 
 
