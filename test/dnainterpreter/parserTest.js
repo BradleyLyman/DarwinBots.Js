@@ -58,7 +58,58 @@ module.exports.testParseSysvarAddr = {
   }
 };
 
+var binOpTests = function(test, cmdString, testDescriptors) {
+  testDescriptors.forEach(function(descriptor) {
+    var cmd = parser.parseOperation(Token(cmdString)).result,
+        res = cmd(descriptor.a, descriptor.b);
 
+    test.equals(res, descriptor.result,
+      "parsed " + cmdString + "(" + descriptor.a + ", " + descriptor.b +
+      ") and got " + res + " but expected " + descriptor.result);
+  });
+
+  test.done();
+};
+
+module.exports.testParseOperation = {
+  add : function(test) {
+    binOpTests(test, "add", [
+      { a : 100       , b : 1         , result : 101 } ,
+      { a : undefined , b : 10        , result : 10 } ,
+      { a : 10        , b : undefined , result : 10 } ,
+      { a : "10"      , b : "aoeu"    , result : 0 }
+    ]);
+  },
+
+  sub : function(test) {
+    binOpTests(test, "sub", [
+      { a : 100       , b : 1         , result : 99 } ,
+      { a : undefined , b : 10        , result : -10 } ,
+      { a : 10        , b : undefined , result : 10 } ,
+      { a : "10"      , b : "aoeu"    , result : 0 }
+    ]);
+  },
+
+  mult : function(test) {
+    binOpTests(test, "mult", [
+      { a : 100       , b : 1         , result : 100 } ,
+      { a : undefined , b : 10        , result : 0 } ,
+      { a : 10        , b : undefined , result : 0 } ,
+      { a : "10"      , b : "aoeu"    , result : 0 }
+    ]);
+  },
+
+  div : function(test) {
+    binOpTests(test, "div", [
+      { a : 100       , b : 1         , result : 100 } ,
+      { a : 100       , b : 2         , result : 50 } ,
+      { a : 3         , b : 5         , result : 1 } ,
+      { a : undefined , b : 10        , result : 0 } ,
+      { a : 10        , b : undefined , result : 0 } ,
+      { a : "10"      , b : "aoeu"    , result : 0 }
+    ]);
+  },
+};
 
 
 

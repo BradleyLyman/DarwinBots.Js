@@ -17,6 +17,43 @@ var _createSuccess = function(payload) {
 };
 
 /**
+ * Returns the number if it is valid, else returns 0.
+ **/
+var _validateNumber = function(val) {
+  return typeof val === "number" && isFinite(val) ? val : 0;
+};
+
+/**
+ * Adds two validated numbers.
+ **/
+var _add = function(a, b) {
+  return _validateNumber(a) + _validateNumber(b);
+};
+
+/**
+ * Subtracts two validated numbers. (a - b)
+ **/
+var _sub = function(a, b) {
+  return _validateNumber(a) - _validateNumber(b);
+};
+
+/**
+ * Multiples two validated numbers. (a * b)
+ **/
+var _mult = function(a, b) {
+  return _validateNumber(a) * _validateNumber(b);
+};
+
+/**
+ * Divides two validated numbers. (a / b);
+ **/
+var _div = function(a, b) {
+  return Math.round(_validateNumber(
+    _validateNumber(a) / _validateNumber(b)
+  ));
+};
+
+/**
  * Public API
  **/
 
@@ -82,6 +119,33 @@ module.exports = {
     return _createSuccess(function() {
       return addr;
     });
+  },
+
+  /**
+   * Parses the token's value for an operator.
+   * Returns:
+   *   Result object, if an error is present then parsing failed.
+   *   Otherwise result will be a function which applies the operation
+   *   and returns some value.
+   **/
+  parseOperation : function(token) {
+    if (token.value === "add") {
+      return _createSuccess(_add);
+    }
+
+    if (token.value === "sub") {
+      return _createSuccess(_sub);
+    }
+
+    if (token.value === "mult") {
+      return _createSuccess(_mult);
+    }
+
+    if (token.value === "div") {
+      return _createSuccess(_div);
+    }
+
+    return _createError(token);
   }
 };
 
