@@ -61,7 +61,8 @@ module.exports.testParseSysvarAddr = {
 
 var binOpTests = function(test, cmdString, testDescriptors) {
   testDescriptors.forEach(function(descriptor) {
-    var cmd = parser.parseOperation(Token(cmdString)).result,
+    var cmd = parser.parseOperation(Token(cmdString)).result ||
+              parser.parseBoolOperation(Token(cmdString)).result,
         res = cmd(descriptor.a, descriptor.b);
 
     test.equals(res, descriptor.result,
@@ -108,6 +109,68 @@ module.exports.testParseOperation = {
       { a : undefined , b : 10        , result : 0 } ,
       { a : 10        , b : undefined , result : 0 } ,
       { a : "10"      , b : "aoeu"    , result : 0 }
+    ]);
+  },
+};
+
+module.exports.testParseBoolOperation = {
+  greater : function(test) {
+    binOpTests(test, ">", [
+      { a : 100       , b : 1         , result : true },
+      { a : 100       , b : 100       , result : false },
+      { a : 100       , b : 101       , result : false },
+      { a : undefined , b : -1        , result : true },
+      { a : 10        , b : undefined , result : true }
+    ]);
+  },
+
+  less : function(test) {
+    binOpTests(test, "<", [
+      { a : 100       , b : 1         , result : false },
+      { a : 100       , b : 100       , result : false },
+      { a : 100       , b : 101       , result : true },
+      { a : undefined , b : -1        , result : false },
+      { a : 10        , b : undefined , result : false }
+    ]);
+  },
+
+  equal : function(test) {
+    binOpTests(test, "=", [
+      { a : 100       , b : 1         , result : false },
+      { a : 100       , b : 100       , result : true },
+      { a : 100       , b : 101       , result : false },
+      { a : undefined , b : -1        , result : false },
+      { a : 10        , b : undefined , result : false }
+    ]);
+  },
+
+  notEqual : function(test) {
+    binOpTests(test, "!=", [
+      { a : 100       , b : 1         , result : true },
+      { a : 100       , b : 100       , result : false },
+      { a : 100       , b : 101       , result : true },
+      { a : undefined , b : -1        , result : true },
+      { a : 10        , b : undefined , result : true }
+    ]);
+  },
+
+  greaterOrEqual : function(test) {
+    binOpTests(test, ">=", [
+      { a : 100       , b : 1         , result : true },
+      { a : 100       , b : 100       , result : true },
+      { a : 100       , b : 101       , result : false },
+      { a : undefined , b : -1        , result : true },
+      { a : 10        , b : undefined , result : true }
+    ]);
+  },
+
+  lessOrEqual : function(test) {
+    binOpTests(test, "<=", [
+      { a : 100       , b : 1         , result : false },
+      { a : 100       , b : 100       , result : true },
+      { a : 100       , b : 101       , result : true },
+      { a : undefined , b : -1        , result : false },
+      { a : 10        , b : undefined , result : false }
     ]);
   },
 };
@@ -225,6 +288,9 @@ module.exports.testParseBody = {
       },
       { source : "start 5 .up add .down store 1 6 mult .dx store stop",
         expectedSysvars : { down : 5, dx : 6 }
+      },
+      { source : "start 5 *.up add .down store stop",
+        expectedSysvars : { down : 5 }
       }
     ]);
   }

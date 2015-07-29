@@ -63,6 +63,35 @@ var _store = function(a, b, sysvars) {
 };
 
 /**
+ * Each binary op function compares the validated result
+ * of the provided values and returns the result.
+ **/
+
+var _greater = function(a, b) {
+  return _validateNumber(a) > _validateNumber(b);
+};
+
+var _less = function(a, b) {
+  return _validateNumber(a) < _validateNumber(b);
+};
+
+var _equal = function(a, b) {
+  return _validateNumber(a) === _validateNumber(b);
+};
+
+var _notEqual = function(a, b) {
+  return _validateNumber(a) !== _validateNumber(b);
+};
+
+var _greaterOrEqual = function(a, b) {
+  return _validateNumber(a) >= _validateNumber(b);
+};
+
+var _lessOrEqual = function(a, b) {
+  return _validateNumber(a) <= _validateNumber(b);
+};
+
+/**
  * Public API
  **/
 
@@ -181,6 +210,41 @@ var parseOperation = function(token) {
 
   if (token.value === "store") {
     return _createSuccess(_store);
+  }
+
+  return _createError(token);
+};
+
+/**
+ * Parses the token's value as a boolean operation.
+ * Returns:
+ *   If parsing failed then the token will be returned as an error,
+ *   otherwise a result object will be returned with a function
+ *   which executes the operation.
+ **/
+var parseBoolOperation = function(token) {
+  if (token.value === ">") {
+    return _createSuccess(_greater);
+  }
+
+  if (token.value === "<") {
+    return _createSuccess(_less);
+  }
+
+  if (token.value === "=") {
+    return _createSuccess(_equal);
+  }
+
+  if (token.value === "!=") {
+    return _createSuccess(_notEqual);
+  }
+
+  if (token.value === ">=") {
+    return _createSuccess(_greaterOrEqual);
+  }
+
+  if (token.value === "<=") {
+    return _createSuccess(_lessOrEqual);
   }
 
   return _createError(token);
@@ -307,12 +371,13 @@ var parseBody = function(tokenStack) {
 };
 
 module.exports = {
-  parseNumber     : parseNumber,
-  parseOperation  : parseOperation,
-  parseSysvar     : parseSysvar,
-  parseSysvarAddr : parseSysvarAddr,
-  parseExpression : parseExpression,
-  parseBody       : parseBody
+  parseNumber        : parseNumber,
+  parseOperation     : parseOperation,
+  parseSysvar        : parseSysvar,
+  parseSysvarAddr    : parseSysvarAddr,
+  parseExpression    : parseExpression,
+  parseBody          : parseBody,
+  parseBoolOperation : parseBoolOperation
 };
 
 
