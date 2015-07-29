@@ -40,7 +40,7 @@ var _linesToTokenStack = function(lineTokens) {
     });
   });
 
-  return Immutable.fromJS(tokens).toStack();
+  return Immutable.Stack().unshiftAll(tokens);
 };
 
 /**

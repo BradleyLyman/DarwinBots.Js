@@ -1,4 +1,5 @@
-var parser = require('../../src/dnainterpreter/parser.js');
+var parser    = require('../../src/dnainterpreter/parser.js'),
+    tokenizer = require('../../src/dnainterpreter/tokenizer.js');
 
 var Token = function(valueString, lineNum) {
   return { value : valueString || "", lineNum : lineNum || 5 };
@@ -109,6 +110,33 @@ module.exports.testParseOperation = {
       { a : "10"      , b : "aoeu"    , result : 0 }
     ]);
   },
+};
+
+var expressionStrings = {
+  invalid : "1 3 add 56",
+  simple  : "1 3 add"
+};
+
+module.exports.testParseExpression = {
+  invalidExpression : function(test) {
+    var tokens = tokenizer.tokenize(expressionStrings.invalid),
+        result = parser.parseExpression(tokens);
+
+    test.ok(result.error, "Expected an error when parsing a malformed expression");
+    test.done();
+  },
+
+  simpleExpression : function(test) {
+    var tokens        = tokenizer.tokenize(expressionStrings.simple),
+        expressResult = parser.parseExpression(tokens);
+
+    var parsedTokens  = expressResult.tokens,
+        cmd           = expressResult.result;
+
+    test.equals(parsedTokens.size, 0, "expected all tokens to be used");
+    test.equals(cmd(), 4, "expected computed result to equal 4 but got " + cmd());
+    test.done();
+  }
 };
 
 

@@ -16,6 +16,6 @@ module.exports.testLinesToTokenStack = function(test) {
       tokenStack     = tokenizer._private.linesToTokenStack(tokenizedLines);
 
   test.ok(Immutable.Stack.isStack(tokenStack));
-  test.equals(tokenStack.peek().get("value"), "stop", "the first token should be the last token in the source");
+  test.equals(tokenStack.peek().value, "stop", "the first token should be the last token in the source");
   test.done();
 };
