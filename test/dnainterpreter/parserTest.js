@@ -176,11 +176,12 @@ module.exports.testParseBoolOperation = {
 };
 
 var expressionStrings = {
-  invalid : "1 3 add 56",
-  simple  : "1 3 add",
-  complex : "1 2 add 2 3 mult sub",
-  readSysvar : "*.nrg 5 mult",
-  storeSysvar : "10 .up store"
+  invalid     : "1 3 add 56",
+  simple      : "1 3 add",
+  complex     : "1 2 add 2 3 mult sub",
+  readSysvar  : "*.nrg 5 mult",
+  storeSysvar : "10 .up store",
+  boolExpr    : "10 11 <"
 };
 
 var _testExpressions = function(test, testDescriptors) {
@@ -207,7 +208,8 @@ module.exports.testParseExpression = {
   validExpressions : function(test) {
     _testExpressions(test, [
       { source : expressionStrings.simple, result : 4 },
-      { source : expressionStrings.complex, result : -3 }
+      { source : expressionStrings.complex, result : -3 },
+      { source : expressionStrings.boolExpr, result : true }
     ]);
   },
 
@@ -291,12 +293,64 @@ module.exports.testParseBody = {
       },
       { source : "start 5 *.up add .down store stop",
         expectedSysvars : { down : 5 }
-      }
+      },
     ]);
   }
 };
 
+var condSources = {
+  noStart : "cond 1 2 < 4 *.up add 3 >",
+  noCond  : "1 2 < 4 *.up add 3 > start"
+};
 
+var condTests = function(test, testDescriptors) {
+  testDescriptors.forEach(function(descriptor) {
+    var tokens  = tokenizer.tokenize(descriptor.source),
+        result  = parser.parseCond(tokens),
+        sysvars = descriptor.sysvars;
+
+    test.ok(!result.error,
+      "Failed to parse cond with source: " + descriptor.source + "\n" +
+      "Error was: " + result.error);
+
+    test.equals(result.result(sysvars), descriptor.result,
+      "Expected " + descriptor.result + " but got " + !descriptor.result +
+      "\n source: " + descriptor.source);
+  });
+  test.done();
+};
+
+module.exports.testParseCond = {
+  noStop : function(test) {
+    var tokens = tokenizer.tokenize(condSources.noStart),
+        result = parser.parseCond(tokens);
+
+    test.ok(result.error, "expected an error when parsing cond");
+    test.equals(result.error.payload.value, ">", "Expected the error to contain the offending token");
+    test.done();
+  },
+
+  noStart : function(test) {
+    var tokens = tokenizer.tokenize(condSources.noCond),
+        result = parser.parseCond(tokens);
+
+    test.ok(result.error, "Expected error when parsing cond");
+    //test.equals(result.error.payload.value, "", "Expected error to contain offending token");
+    //test.equals(result.error.payload.lineNum, 1, "Expected error to contain proper line number");
+    test.done();
+  },
+
+  validConds : function(test) {
+    condTests(test, [
+      { source : "cond 1 2 < start", result : true },
+      { source  : "cond 3 *.up = 1 *.down = start",
+        sysvars : { up : 3, down : 1 },
+        result  : true
+      },
+      { source : "cond 1 1 = 2 3 = start", result : false }
+    ]);
+  }
+};
 
 
 

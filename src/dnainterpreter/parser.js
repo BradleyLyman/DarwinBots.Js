@@ -297,7 +297,10 @@ parseExpression = function(tokenStack) {
 
   // failure to parse the operation is fatal
   if (operation.error !== null) {
-    return _createError(operation.error);
+    operation = parseBoolOperation(currentToken);
+    if (operation.error !== null) {
+      return _createError(operation.error);
+    }
   }
   operationCmd = operation.result;
 
@@ -370,6 +373,50 @@ var parseBody = function(tokenStack) {
   });
 };
 
+/**
+ * Parses the token stream as a cond block.
+ * Returns:
+ *   If an error is returned then parsing failed, otherwise
+ *   returns a result object with a function which when
+ *   executed returns a true or false indicating the cond
+ *   block's output.
+ **/
+var parseCond = function(tokenStack) {
+  var token        = tokenStack.peek(),
+      resultTokens = tokenStack.shift(),
+      expressions  = [],
+      expressionParseResult;
+
+  if (token.value !== "start") {
+    return _createError({
+      message : "Expected 'start' token on line " + token.lineNum,
+      payload : token
+    });
+  }
+
+  expressionParseResult = parseExpression(resultTokens);
+  while (expressionParseResult.error === null) {
+    resultTokens = expressionParseResult.tokens;
+    expressions.unshift(expressionParseResult.result);
+
+    expressionParseResult = parseExpression(resultTokens);
+  }
+
+  token = resultTokens.peek();
+  if (token.value !== "cond") {
+    return _createError({
+      message : "'cond' token expected on line " + token.lineNum,
+      payload : token
+    });
+  }
+
+  return _createSuccess(function(sysvars) {
+    return expressions.reduce(function(total, expression) {
+      return total && expression(sysvars);
+    }, true);
+  });
+};
+
 module.exports = {
   parseNumber        : parseNumber,
   parseOperation     : parseOperation,
@@ -377,7 +424,8 @@ module.exports = {
   parseSysvarAddr    : parseSysvarAddr,
   parseExpression    : parseExpression,
   parseBody          : parseBody,
-  parseBoolOperation : parseBoolOperation
+  parseBoolOperation : parseBoolOperation,
+  parseCond          : parseCond
 };
 
 
