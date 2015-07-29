@@ -114,7 +114,20 @@ module.exports.testParseOperation = {
 
 var expressionStrings = {
   invalid : "1 3 add 56",
-  simple  : "1 3 add"
+  simple  : "1 3 add",
+  complex : "1 2 add 2 3 mult sub"
+};
+
+var _testExpressions = function(test, testDescriptors) {
+  testDescriptors.forEach(function(descriptor) {
+    var tokens       = tokenizer.tokenize(descriptor.source),
+        result       = parser.parseExpression(tokens),
+        cmd          = result.result;
+
+    test.equals(cmd(), descriptor.result,
+      "expected result to be " + descriptor.result + " but got " + cmd());
+  });
+  test.done();
 };
 
 module.exports.testParseExpression = {
@@ -126,16 +139,11 @@ module.exports.testParseExpression = {
     test.done();
   },
 
-  simpleExpression : function(test) {
-    var tokens        = tokenizer.tokenize(expressionStrings.simple),
-        expressResult = parser.parseExpression(tokens);
-
-    var parsedTokens  = expressResult.tokens,
-        cmd           = expressResult.result;
-
-    test.equals(parsedTokens.size, 0, "expected all tokens to be used");
-    test.equals(cmd(), 4, "expected computed result to equal 4 but got " + cmd());
-    test.done();
+  validExpressions : function(test) {
+    _testExpressions(test, [
+      { source : expressionStrings.simple, result : 4 },
+      { source : expressionStrings.complex, result : -3 }
+    ]);
   }
 };
 
