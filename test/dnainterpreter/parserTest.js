@@ -115,7 +115,9 @@ module.exports.testParseOperation = {
 var expressionStrings = {
   invalid : "1 3 add 56",
   simple  : "1 3 add",
-  complex : "1 2 add 2 3 mult sub"
+  complex : "1 2 add 2 3 mult sub",
+  readSysvar : "*.nrg 5 mult",
+  storeSysvar : "10 .up store"
 };
 
 var _testExpressions = function(test, testDescriptors) {
@@ -144,6 +146,24 @@ module.exports.testParseExpression = {
       { source : expressionStrings.simple, result : 4 },
       { source : expressionStrings.complex, result : -3 }
     ]);
+  },
+
+  readSysvarExpression : function(test)  {
+    var tokens = tokenizer.tokenize(expressionStrings.readSysvar),
+        cmd    = parser.parseExpression(tokens).result;
+
+    test.equals(cmd({ nrg : 10}), 50, "Expected expression to equal nrg * 5");
+    test.done();
+  },
+
+  storeSysvar : function(test) {
+    var tokens  = tokenizer.tokenize(expressionStrings.storeSysvar),
+        cmd     = parser.parseExpression(tokens).result,
+        sysvars = {};
+
+    test.equals(cmd(sysvars), 10, "sysvar value should be returned from store expression");
+    test.equals(sysvars.up, 10, "value should be saved to the sysvar");
+    test.done();
   }
 };
 

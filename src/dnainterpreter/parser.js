@@ -54,6 +54,15 @@ var _div = function(a, b) {
 };
 
 /**
+ * Stores value a in sysvar with name b.
+ * Returns value stored.
+ **/
+var _store = function(a, b, sysvars) {
+  sysvars[b] = _validateNumber(a);
+  return sysvars[b];
+};
+
+/**
  * Public API
  **/
 
@@ -168,6 +177,10 @@ var parseOperation = function(token) {
 
   if (token.value === "div") {
     return _createSuccess(_div);
+  }
+
+  if (token.value === "store") {
+    return _createSuccess(_store);
   }
 
   return _createError(token);
