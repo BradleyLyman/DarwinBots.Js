@@ -261,12 +261,58 @@ parseExpression = function(tokenStack) {
   return finalResult;
 };
 
+/**
+ * Parses the token stream for a body section and
+ * returns a function which execute's the body's code.
+ * Return:
+ *   If error is present then body parsing failed,
+ *   otherwise the function and updated stack are
+ *   returned.
+ *   { error : {}, result : fn, tokens : stack }
+ **/
+var parseBody = function(tokenStack) {
+  var token        = tokenStack.peek(),
+      resultTokens = tokenStack.shift(),
+      expressions  = [],
+      expressionParseResult;
+
+  if (token.value !== "stop") {
+    return _createError({
+      message : "'stop' token expected at: " + token,
+      payload : token
+    });
+  }
+
+  expressionParseResult = parseExpression(resultTokens);
+  while (expressionParseResult.error === null) {
+    resultTokens = expressionParseResult.tokens;
+    expressions.unshift(expressionParseResult.result);
+
+    expressionParseResult = parseExpression(resultTokens);
+  }
+
+  token = resultTokens.peek();
+  if (token.value !== "start") {
+    return _createError({
+      message : "'start' token expected on line " + token.lineNum,
+      payload : token
+    });
+  }
+
+  return _createSuccess(function(sysvars) {
+    expressions.forEach(function(expression) {
+      expression(sysvars);
+    });
+  });
+};
+
 module.exports = {
   parseNumber     : parseNumber,
   parseOperation  : parseOperation,
   parseSysvar     : parseSysvar,
   parseSysvarAddr : parseSysvarAddr,
-  parseExpression : parseExpression
+  parseExpression : parseExpression,
+  parseBody       : parseBody
 };
 
 

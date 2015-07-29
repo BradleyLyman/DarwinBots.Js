@@ -167,7 +167,68 @@ module.exports.testParseExpression = {
   }
 };
 
+var bodySources = {
+  noStop : "start 1 3 add .up store",
+  noStart : "1 3 add .up store stop",
+  oneExpression : "start 1 .up store stop"
+};
 
+var bodyTests = function(test, testDescriptors) {
+  testDescriptors.forEach(function(descriptor) {
+    var tokens  = tokenizer.tokenize(descriptor.source),
+        result  = parser.parseBody(tokens),
+        sysvars = {};
+
+    test.ok(!result.error,
+      "Failed to parse body with source: " + descriptor.source + "\n" +
+      "Error was: " + result.error);
+
+    result.result(sysvars);
+    Object.getOwnPropertyNames(descriptor.expectedSysvars)
+      .forEach(function(sysvarName) {
+        test.equals(descriptor.expectedSysvars[sysvarName], sysvars[sysvarName],
+          "Unexpected value found in ." + sysvarName + " expected " +
+          descriptor.expectedSysvars[sysvarName] + " but got " + sysvars[sysvarName] +
+          "\n " + descriptor.source);
+      });
+  });
+  test.done();
+};
+
+module.exports.testParseBody = {
+  noStop : function(test) {
+    var tokens = tokenizer.tokenize(bodySources.noStop),
+        result = parser.parseBody(tokens);
+
+    test.ok(result.error, "expected an error when parsing the body");
+    test.equals(result.error.payload.value, "store", "Expected the error to contain the offending token");
+    test.done();
+  },
+
+  noStart : function(test) {
+    var tokens = tokenizer.tokenize(bodySources.noStart),
+        result = parser.parseBody(tokens);
+
+    test.ok(result.error, "Expected error when parsing body");
+    test.equals(result.error.payload.value, "", "Expected error to contain offending token");
+    test.equals(result.error.payload.lineNum, 1, "Expected error to contain proper line number");
+    test.done();
+  },
+
+  validBodies : function(test) {
+    bodyTests(test, [
+      { source : "start 1 .up store 3 .shoot store stop",
+        expectedSysvars : { up : 1, shoot : 3}
+      },
+      { source : "start 10 .up store 3 *.up mult .down store stop",
+        expectedSysvars : { up : 10, down : 30 }
+      },
+      { source : "start 5 .up add .down store 1 6 mult .dx store stop",
+        expectedSysvars : { down : 5, dx : 6 }
+      }
+    ]);
+  }
+};
 
 
 

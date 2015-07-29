@@ -31,6 +31,11 @@ var _splitOnLines = function(sourceAsString) {
 var _linesToTokenStack = function(lineTokens) {
   var tokens = [];
 
+  tokens.unshift({
+    lineNum : lineTokens[0].lineNum,
+    value   : ""
+  });
+
   lineTokens.forEach(function(lineToken) {
     lineToken.tokens.forEach(function(token) {
       tokens.unshift({
