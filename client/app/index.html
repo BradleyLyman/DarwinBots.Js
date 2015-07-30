@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <title>DarwinBots.js</title>
+  </head>
+
+  <body>
+    <script src="js/bundle.js"></script>
+    <script>
+      console.log(tokenizer);
+      console.log(rules);
+      console.log(parser);
+      var tokens = tokenizer.tokenize("cond 1 3 < start 3 .up store stop"),
+          cmd    = parser.parseDna(tokens).result,
+          sysvars = {};
+
+      cmd(sysvars);
+      console.log(sysvars);
+
+    </script>
+
+    <p>Test</p>
+  </body>
+</html>
