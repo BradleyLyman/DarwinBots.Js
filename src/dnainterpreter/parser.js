@@ -457,6 +457,36 @@ var parseGene = function(tokenStack) {
   return ret;
 };
 
+/**
+ * Parses the token stream for a set of genes and returns a function
+ * which executes the genes.
+ * Return:
+ *   If parsing fails retuns an object with an error property,
+ *   otherwise returns an object witha  result property equal
+ *   to the execution function.
+ **/
+var parseDna = function(tokenStack) {
+  var geneResult, tokens, genes = [];
+
+  geneResult = parseGene(tokenStack);
+  while (geneResult.error === null) {
+    genes.unshift(geneResult.result);
+    tokens = geneResult.tokens;
+
+    geneResult = parseGene(tokens);
+  }
+
+  if (geneResult.error.payload.value === "") {
+    return _createSuccess(function(sysvars) {
+      genes.forEach(function(gene) {
+        gene(sysvars);
+      });
+    });
+  }
+
+  return _createError(geneResult.error);
+};
+
 module.exports = {
   parseNumber        : parseNumber,
   parseOperation     : parseOperation,
@@ -466,7 +496,8 @@ module.exports = {
   parseBody          : parseBody,
   parseBoolOperation : parseBoolOperation,
   parseCond          : parseCond,
-  parseGene          : parseGene
+  parseGene          : parseGene,
+  parseDna           : parseDna
 };
 
 
