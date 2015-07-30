@@ -341,7 +341,7 @@ var parseBody = function(tokenStack) {
   var token        = tokenStack.peek(),
       resultTokens = tokenStack.shift(),
       expressions  = [],
-      expressionParseResult;
+      expressionParseResult, ret;
 
   if (token.value !== "stop") {
     return _createError({
@@ -366,11 +366,13 @@ var parseBody = function(tokenStack) {
     });
   }
 
-  return _createSuccess(function(sysvars) {
+  ret = _createSuccess(function(sysvars) {
     expressions.forEach(function(expression) {
       expression(sysvars);
     });
   });
+  ret.tokens = resultTokens;
+  return ret;
 };
 
 /**
@@ -385,7 +387,7 @@ var parseCond = function(tokenStack) {
   var token        = tokenStack.peek(),
       resultTokens = tokenStack.shift(),
       expressions  = [],
-      expressionParseResult;
+      expressionParseResult, ret;
 
   if (token.value !== "start") {
     return _createError({
@@ -410,11 +412,49 @@ var parseCond = function(tokenStack) {
     });
   }
 
-  return _createSuccess(function(sysvars) {
+  ret = _createSuccess(function(sysvars) {
     return expressions.reduce(function(total, expression) {
       return total && expression(sysvars);
     }, true);
   });
+  ret.tokens = resultTokens.shift();
+  return ret;
+};
+
+/**
+ * Parses the token stack for the gene provided.
+ * Return:
+ *   If parsing failed then an object with an error
+ *   is returned, otherwise result is a function
+ *   which will execute the gene and tokens is the
+ *   updated stack of tokens.
+ *   { error : {} | null, result : fn, tokens : stack }
+ **/
+var parseGene = function(tokenStack) {
+  var condResult, bodyResult,
+      tokens, condCmd, bodyCmd, ret;
+
+  bodyResult = parseBody(tokenStack);
+  if (bodyResult.error !== null) {
+    return _createError(bodyResult.error);
+  }
+  bodyCmd = bodyResult.result;
+  tokens  = bodyResult.tokens;
+
+  condResult = parseCond(tokens);
+  if (condResult.error !== null) {
+    return _createError(condResult.error);
+  }
+  condCmd = condResult.result;
+  tokens  = condResult.tokens;
+
+  ret = _createSuccess(function(sysvars) {
+    if (condCmd(sysvars)) {
+      bodyCmd(sysvars);
+    }
+  });
+  ret.tokens = tokens;
+  return ret;
 };
 
 module.exports = {
@@ -425,7 +465,8 @@ module.exports = {
   parseExpression    : parseExpression,
   parseBody          : parseBody,
   parseBoolOperation : parseBoolOperation,
-  parseCond          : parseCond
+  parseCond          : parseCond,
+  parseGene          : parseGene
 };
 
 

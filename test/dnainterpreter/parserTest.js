@@ -352,7 +352,34 @@ module.exports.testParseCond = {
   }
 };
 
+var geneSources = {
+  activeGene : "cond 1 2 < 5 3 2 sub > start 100 .up store -20 .tieval store stop",
+  inactiveGene : "cond 1 2 < 5 3 2 add > start 100 .up store -20 .tieval store stop",
+};
 
+module.exports.testParseGene = {
+  activeGene : function(test) {
+    var tokens = tokenizer.tokenize(geneSources.activeGene),
+        geneCmd = parser.parseGene(tokens).result,
+        sysvars = {};
+
+    geneCmd(sysvars);
+    test.equals(sysvars.up, 100, "expected up to have a value of 100 but found " + sysvars.up);
+    test.equals(sysvars.tieval, -20, "expected tieval to have a value of -20 but found " + sysvars.tieval);
+    test.done();
+  },
+
+  inactiveGene : function(test) {
+    var tokens = tokenizer.tokenize(geneSources.inactiveGene),
+        geneCmd = parser.parseGene(tokens).result,
+        sysvars = { up : 10, tieval : 33 };
+
+    geneCmd(sysvars);
+    test.equals(sysvars.up, 10, "expected up to have a value of 10 but found " + sysvars.up);
+    test.equals(sysvars.tieval, 33, "expected tieval to have a value of 33 but found " + sysvars.tieval);
+    test.done();
+  }
+};
 
 
 
