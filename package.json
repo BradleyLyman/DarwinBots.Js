@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "nodemon runtests.js -w src -w test"
+    "test": "nodemon runtests.js -w src -w test",
   },
   "repository": {
     "type": "git",
@@ -17,18 +17,7 @@
   },
   "homepage": "https://github.com/BradLyman/DarwinBots.Js#readme",
   "devDependencies": {
-    "assign": "^0.1.7",
-    "browser-sync": "^2.8.1",
-    "browserify": "^11.0.1",
-    "diveSync": "^0.3.0",
-    "gulp": "^3.9.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^1.2.0",
-    "gulp-util": "^3.0.6",
-    "nodeunit": "^0.9.1",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.3.1"
+    "nodeunit": "^0.9.1"
   },
   "dependencies": {
     "immutable": "^3.7.4"
