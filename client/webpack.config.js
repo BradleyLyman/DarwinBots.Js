@@ -1,6 +1,7 @@
-var path         = require('path'),
-    node_modules = path.resolve(__dirname, 'node_modules'),
-    pathToReact  = path.resolve(node_modules, 'react/dist/react.min.js');
+var path              = require('path'),
+    node_modules      = path.resolve(__dirname, 'node_modules'),
+    pathToReact       = path.resolve(node_modules, 'react/dist/react.min.js'),
+    HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry  : ['webpack/hot/dev-server', path.resolve(__dirname, 'app/main.js')],
@@ -20,4 +21,11 @@ module.exports = {
     }],
     noParse : [pathToReact]
   },
+  plugins : [
+    new HtmlWebpackPlugin({
+      title    : 'DarwinBots.js',
+      template : './app/index.html',
+      inject   : 'body'
+    })
+  ]
 };
