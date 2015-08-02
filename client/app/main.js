@@ -1,6 +1,6 @@
 'use strict';
 var React = require('react'),
-    Hello = require('./component.jsx');
+    Hello = require('./components/dnaLoader/dnaLoader.jsx');
 
 require('materialize.css');
 require('materialize.js');
