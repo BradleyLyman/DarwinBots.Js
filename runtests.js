@@ -1,5 +1,5 @@
-var diveSync          = require("diveSync"),
-    fs                = require("fs"),
+var diveSync          = require('diveSync'),
+    fs                = require('fs'),
     nodeUnit          = require('nodeunit'),
     directoriesToTest = ['test'];
 

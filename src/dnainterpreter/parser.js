@@ -1,71 +1,47 @@
 /**
- * Create an error object.
- * Returns:
- *   Object with the error value set to payload.
+ * This module contains all of the functions required to compile tokenized
+ * DarwinBots dna into a usable javascript function.
+ * @module dnaInterpreter
  **/
-var _createError = function(payload) {
-  return { error : payload };
-};
 
 /**
- * Creates a success object.
- * Returns:
- *   Object with error set to null and result set to payload.
+ * DnaFunction is what all of the parse* funtions return in their Ok value
+ * when they execute successfully.
+ * @typedef DnaFunction
+ * @type {Function}
+ * @param {Object} sysvars - Sysvars will be updated by the DnaFunction.
  **/
-var _createSuccess = function(payload) {
-  return { error : null, result : payload };
-};
 
-/**
- * Returns the number if it is valid, else returns 0.
- **/
+var Result = require('object-result'),
+    Ok     = Result.Ok,
+    Err    = Result.Err;
+
 var _validateNumber = function(val) {
   return typeof val === "number" && isFinite(val) ? val : 0;
 };
 
-/**
- * Adds two validated numbers.
- **/
 var _add = function(a, b) {
   return _validateNumber(a) + _validateNumber(b);
 };
 
-/**
- * Subtracts two validated numbers. (a - b)
- **/
 var _sub = function(a, b) {
   return _validateNumber(a) - _validateNumber(b);
 };
 
-/**
- * Multiples two validated numbers. (a * b)
- **/
 var _mult = function(a, b) {
   return _validateNumber(a) * _validateNumber(b);
 };
 
-/**
- * Divides two validated numbers. (a / b);
- **/
 var _div = function(a, b) {
   return Math.round(_validateNumber(
     _validateNumber(a) / _validateNumber(b)
   ));
 };
 
-/**
- * Stores value a in sysvar with name b.
- * Returns value stored.
- **/
 var _store = function(a, b, sysvars) {
   sysvars[b] = _validateNumber(a);
   return sysvars[b];
 };
-
-/**
- * Each binary op function compares the validated result
- * of the provided values and returns the result.
- **/
 
 var _greater = function(a, b) {
   return _validateNumber(a) > _validateNumber(b);
@@ -91,418 +67,348 @@ var _lessOrEqual = function(a, b) {
   return _validateNumber(a) <= _validateNumber(b);
 };
 
-/**
- * Public API
- **/
-
+var parseNumber =
 /**
  * Parses the token's value for the integer it represents.
- * Returns:
- *   Result object, if an error is present then parsing failed,
- *   otherwise result will be a function which returts the number's
- *   value.
- *   function() { return number; }
+ * @param {module:tokenizer~Token} token - Token to parse
+ * @return {module:object-result~Result}
  **/
-var parseNumber = function(token) {
+module.exports._private.parseNumber = function(token) {
   var number = parseInt(token.value, 10);
   if (isNaN(number)) {
-    return _createError(token);
+    return Err(token);
   }
 
-  return _createSuccess(function() {
+  return Ok(function() {
     return number;
   });
 };
 
+var parseSysvar =
 /**
- * Parses the token's value for a sysvar's value.
- * Returns:
- *   Result object, if an error is present then parsing failed.
- *   Otherwise result will be a function which return's the sysvar's
- *   value.
- *   function(sysvars) { return sysvar; }
+ * Parses a token as a sysvar returning a function which
+ * will return the sysvar's value when called.
+ * @param {module:tokenizer~Token}
+ * @return {module:object-result~Result}
  **/
-var parseSysvar = function(token) {
+module.exports._private.parseSysvar = function(token) {
   var addr = 0;
 
   if (token.value[0] !== "*" || token.value[1] !== ".") {
-    return _createError(token);
+    return Err(token);
   }
 
   addr = token.value.slice(2);
 
-  return _createSuccess(function(sysvars) {
+  return Ok(function(sysvars) {
     return sysvars[addr] || 0;
   });
 };
 
+var parseSysvarAddr =
 /**
- * Parses the token's value for a sysvar's name.
- * Returns:
- *   Result object, if an error is present then parsing failed.
- *   Otherwise result will be a function which returns the sysvar's
- *   value.
- *   function() { return name; }
+ * Parses the token as a sysvar address command.
+ * @param {module:tokenizer~Token} token - The token to parse.
+ * @return {module:object-result~Result}
  **/
-var parseSysvarAddr = function(token) {
+module.exports._private.parseSysvarAddr = function(token) {
   var addr;
 
   if (token.value[0] !== ".") {
-    return _createError(token);
+    return Err(token);
   }
 
   addr = token.value.slice(1);
 
-  return _createSuccess(function() {
+  return Ok(function() {
     return addr;
   });
 };
 
+var parseValue =
 /**
- * Parses the token as a sysvar, a sysvar address,
- * or as a numeric literal. Returns error on failure.
+ * Parses the token as a sysvar, a sysvar address, or a numeric
+ * literal.
+ * @param {module:tokenizer~Token} token - The token to parse.
+ * @return {module:object-result~Result}
  **/
-var parseValue = function(token) {
-  var cmd = parseSysvarAddr(token);
-
-  if (cmd.error === null) {
-    return _createSuccess(cmd.result);
-  }
-
-  cmd = parseSysvar(token);
-
-  if (cmd.error === null) {
-    return _createSuccess(cmd.result);
-  }
-
-  cmd = parseNumber(token);
-
-  if (cmd.error === null) {
-    return _createSuccess(cmd.result);
-  }
-
-  return _createError(token);
+module.exports._private.parseValue = function(token) {
+  return parseSysvarAddr(token)
+    .or_else(parseSysvar(token))
+    .or_else(parseNumber(token));
 };
 
+var parseOperation =
 /**
  * Parses the token's value for an operator.
- * Returns:
- *   Result object, if an error is present then parsing failed.
- *   Otherwise result will be a function which applies the operation
- *   and returns some value.
+ * @param {module:tokenizer~Token} token - The token to parse as an operator.
+ * @return {module:object-result~Result}
  **/
-var parseOperation = function(token) {
+module.exports._private.parseOperation = function(token) {
   if (token.value === "add") {
-    return _createSuccess(_add);
+    return Ok(_add);
   }
 
   if (token.value === "sub") {
-    return _createSuccess(_sub);
+    return Ok(_sub);
   }
 
   if (token.value === "mult") {
-    return _createSuccess(_mult);
+    return Ok(_mult);
   }
 
   if (token.value === "div") {
-    return _createSuccess(_div);
+    return Ok(_div);
   }
 
   if (token.value === "store") {
-    return _createSuccess(_store);
+    return Ok(_store);
   }
 
-  return _createError(token);
+  return Err(token);
 };
 
+var parseBoolOperation =
 /**
  * Parses the token's value as a boolean operation.
- * Returns:
- *   If parsing failed then the token will be returned as an error,
- *   otherwise a result object will be returned with a function
- *   which executes the operation.
+ * @param {module:tokenizer~Token} token - The token to parse as a bool op.
+ * @return {module:object-result~Result}
  **/
-var parseBoolOperation = function(token) {
+module.exports._private.parseBoolOperation = function(token) {
   if (token.value === ">") {
-    return _createSuccess(_greater);
+    return Ok(_greater);
   }
 
   if (token.value === "<") {
-    return _createSuccess(_less);
+    return Ok(_less);
   }
 
   if (token.value === "=") {
-    return _createSuccess(_equal);
+    return Ok(_equal);
   }
 
   if (token.value === "!=") {
-    return _createSuccess(_notEqual);
+    return Ok(_notEqual);
   }
 
   if (token.value === ">=") {
-    return _createSuccess(_greaterOrEqual);
+    return Ok(_greaterOrEqual);
   }
 
   if (token.value === "<=") {
-    return _createSuccess(_lessOrEqual);
+    return Ok(_lessOrEqual);
   }
 
-  return _createError(token);
+  return Err(token);
 };
 
 /* forward declaration */
 var parseExpression = function() { return; };
 
+var parseStatement =
 /**
  * Parses the token stack assuming the next token is a value.
  * If the assumption is false then the token will be parsed
  * as an expression.
- * Return:
- *   If parsing fails then an error will be returned, otherwise
- *   the object will have the updated stack and the result function.
- *   { error : {}, result : fn, tokens : tokenStack }
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of tokens to parse.
+ * @return {module:object-result~Result} - Ok value is an object with two properties,
+ *                                         a dnaFunction and tokens.
+ *                                         Representing the DnaFunction for the statement
+ *                                         and the resulting tokenStack.
  **/
-var parseStatement = function(tokenStack) {
-  var token       = tokenStack.peek(),
-      valueResult = parseValue(token),
-      retVal      = {};
+module.exports._private.parseStatement = function(tokenStack) {
+  var token = tokenStack.peek();
 
-  if (valueResult.error !== null) {
-    return parseExpression(tokenStack);
-  }
-
-  retVal        = _createSuccess(valueResult.result);
-  retVal.tokens = tokenStack.shift();
-
-  return retVal;
+  return parseValue(token)
+    .and_then(function(dnaFunction) {
+      return Ok({ dnaFunction : dnaFunction, tokens : tokenStack.shift() });
+    })
+    .or_else(parseExpression(tokenStack));
 };
 
+parseExpression =
 /**
  * Parses a stack of tokens, consuming each one in turn,
  * until a complete statement is built or an error
  * occurs.
- * Returns:
- *   If an error exists then parsing failed, otherwise
- *   result is the function which executes the expression
- *   and the updated tokenStack is called stack.
- *   { error : null, reult : fn, tokens : tokenStack }
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of token objects.
+ * @return {module:object-result~Result} - Ok value is an object with two properties,
+ *                                         dnaFunction and tokens.
  **/
-parseExpression = function(tokenStack) {
-  var currentToken   = tokenStack.peek(),
-      operation      = parseOperation(currentToken),
-      operationCmd,
-      stackA, resultA, cmdA,
-      stackB, resultB, cmdB,
-      finalResult;
+module.exports._private.parseExpression = function(tokenStack) {
+  var currentToken = tokenStack.peek(),
+      operation, resultA, resultB,
+      opDnaFunc, dnaFuncA, dnaFuncB;
 
-  // failure to parse the operation is fatal
-  if (operation.error !== null) {
-    operation = parseBoolOperation(currentToken);
-    if (operation.error !== null) {
-      return _createError(operation.error);
-    }
+  operation = parseOperation(currentToken)
+    .or_else(parseBoolOperation(currentToken));
+  if (operation.is_err()) {
+    return operation;
   }
-  operationCmd = operation.result;
 
-  resultA = parseStatement(tokenStack.shift());
-  if (resultA.error !== null) {
-    return _createError(operation.error);
+  tokenStack = tokenStack.shift();
+  resultA    = parseStatement(tokenStack);
+  if (resultA.is_err()) {
+    return resultA;
   }
-  stackA = resultA.tokens;
-  cmdA   = resultA.result;
 
-  resultB = parseStatement(stackA);
-  if (resultB.error !== null) {
-    return _createError(operation.error);
+  tokenStack = resultA.get_ok().tokens;
+  resultB    = parseStatement(tokenStack);
+  if (resultB.is_err()) {
+    return resultB;
   }
-  stackB = resultB.tokens;
-  cmdB   = resultB.result;
 
-  finalResult = _createSuccess(function(sysvars) {
-    var b = cmdB(sysvars);
-    var a = cmdA(sysvars);
-    return operationCmd(b, a, sysvars);
+  tokenStack = resultB.get_ok().tokens;
+  opDnaFunc  = operation.get_ok().dnaFunction;
+  dnaFuncA   = resultA.get_ok().dnaFunction;
+  dnaFuncB   = resultB.get_ok().dnaFunction;
+  return Ok({
+    dnaFunction : function(sysvars) {
+      var b = dnaFuncB(sysvars);
+      var a = dnaFuncA(sysvars);
+      return opDnaFunc(b, a, sysvars);
+    },
+    tokens : tokenStack
   });
-  finalResult.tokens = stackB;
-
-  return finalResult;
 };
 
+var parseBody =
 /**
  * Parses the token stream for a body section and
  * returns a function which execute's the body's code.
- * Return:
- *   If error is present then body parsing failed,
- *   otherwise the function and updated stack are
- *   returned.
- *   { error : {}, result : fn, tokens : stack }
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of tokens.
+ * @return {module:object-result~Result} - Ok value is an object with
+ *                                         properties dnaFunction and tokens.
  **/
-var parseBody = function(tokenStack) {
+module.exports._private.parseBody = function(tokenStack) {
   var token        = tokenStack.peek(),
-      resultTokens = tokenStack.shift(),
       expressions  = [],
       expressionParseResult, ret;
 
   if (token.value !== "stop") {
-    return _createError({
-      message : "'stop' token expected at: " + token,
-      payload : token
-    });
+    return Err("'stop' expected on line " + token.lineNum +
+               " before " + token.value);
   }
+  tokenStack = tokenStack.shift();
 
-  expressionParseResult = parseExpression(resultTokens);
-  while (expressionParseResult.error === null) {
-    resultTokens = expressionParseResult.tokens;
-    expressions.unshift(expressionParseResult.result);
+  expression = parseExpression(tokenStack);
+  while (!expression.is_err()) {
+    expressions.unshift(expression.get_ok().dnaFunction);
 
-    expressionParseResult = parseExpression(resultTokens);
+    tokenStack = expression.get_ok().tokens;
+    expression = parseExpression(tokenStack);
   }
 
   token = resultTokens.peek();
   if (token.value !== "start") {
-    return _createError({
-      message : "'start' token expected on line " + token.lineNum,
-      payload : token
-    });
+    return Err("'start' token expected on line " + token.lineNum +
+               " before " + token.value);
   }
 
-  ret = _createSuccess(function(sysvars) {
-    expressions.forEach(function(expression) {
-      expression(sysvars);
-    });
+  return Ok({
+    dnaFunction : function(sysvars) {
+      expressions.forEach(function(expression) {
+        expression(sysvars);
+      });
+    },
+    tokens : tokenStack
   });
-  ret.tokens = resultTokens;
-  return ret;
 };
 
+var parseCond =
 /**
  * Parses the token stream as a cond block.
- * Returns:
- *   If an error is returned then parsing failed, otherwise
- *   returns a result object with a function which when
- *   executed returns a true or false indicating the cond
- *   block's output.
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of tokens.
+ * @return {module:object-result} - Ok value is an object with two properties,
+ *                                  dnaFunction and tokens.
  **/
-var parseCond = function(tokenStack) {
-  var token        = tokenStack.peek(),
-      resultTokens = tokenStack.shift(),
-      expressions  = [],
-      expressionParseResult, ret;
+module.exports._private.parseCond = function(tokenStack) {
+  var expressions  = [],
+      expression;
 
-  if (token.value !== "start") {
-    return _createError({
-      message : "Expected 'start' token on line " + token.lineNum,
-      payload : token
-    });
+  if (tokenStack.peek().value !== "start") {
+    return Err("Expected 'start' token on line " + token.lineNum +
+               " before " + token.value);
+  }
+  tokenStack = tokenStack.shift();
+
+  expression = parseExpression(tokenStack);
+  while (!expression.is_err()) {
+    expressions.unshift(expression.get_ok().dnaFunction);
+    tokenStack = expression.get_ok().tokens;
+
+    expression = parseExpression(tokenStack);
   }
 
-  expressionParseResult = parseExpression(resultTokens);
-  while (expressionParseResult.error === null) {
-    resultTokens = expressionParseResult.tokens;
-    expressions.unshift(expressionParseResult.result);
-
-    expressionParseResult = parseExpression(resultTokens);
+  if (tokenStack.peek().value !== "cond") {
+    return Err("'cond' token expected on line " + token.lineNum +
+               " before " + token.value);
   }
 
-  token = resultTokens.peek();
-  if (token.value !== "cond") {
-    return _createError({
-      message : "'cond' token expected on line " + token.lineNum,
-      payload : token
-    });
-  }
-
-  ret = _createSuccess(function(sysvars) {
-    return expressions.reduce(function(total, expression) {
-      return total && expression(sysvars);
-    }, true);
+  return Ok({
+    dnaFunction : function(sysvars) {
+      return expressions.reduce(function(total, expression) {
+        return total && expression(sysvars);
+      }, true);
+    },
+    tokens : tokenStack.shift()
   });
-  ret.tokens = resultTokens.shift();
-  return ret;
 };
 
+var parseGene =
 /**
  * Parses the token stack for the gene provided.
- * Return:
- *   If parsing failed then an object with an error
- *   is returned, otherwise result is a function
- *   which will execute the gene and tokens is the
- *   updated stack of tokens.
- *   { error : {} | null, result : fn, tokens : stack }
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of tokens.
+ * @return {module:object-result~Result} - Ok value is an object with
+ *                                         properties dnaFunction and tokens.
  **/
-var parseGene = function(tokenStack) {
-  var condResult, bodyResult,
-      tokens, condCmd, bodyCmd, ret;
+module.exports._private.parseGene = function(tokenStack) {
+  var body, cond, bodyCmd, condCmd;
 
-  bodyResult = parseBody(tokenStack);
-  if (bodyResult.error !== null) {
-    return _createError(bodyResult.error);
+  body = parseBody(tokenStack);
+  if (body.is_err()) {
+    return body;
   }
-  bodyCmd = bodyResult.result;
-  tokens  = bodyResult.tokens;
+  tokenStack = body.get_ok().tokens;
 
-  condResult = parseCond(tokens);
-  if (condResult.error !== null) {
-    return _createError(condResult.error);
+  cond = parseCond(tokenStack);
+  if (cond.is_err()) {
+    return cond;
   }
-  condCmd = condResult.result;
-  tokens  = condResult.tokens;
 
-  ret = _createSuccess(function(sysvars) {
-    if (condCmd(sysvars)) {
-      bodyCmd(sysvars);
-    }
+  bodyCmd = body.get_ok().dnaFunction;
+  condCmd = cond.get_ok().dnaFunction;
+  return Ok({
+    dnaFunction : function(sysvars) {
+      if (condCmd(sysvars)) {
+        bodyCmd(sysvars);
+      }
+    },
+    tokens : cond.get_ok().tokens
   });
-  ret.tokens = tokens;
-  return ret;
 };
 
 /**
  * Parses the token stream for a set of genes and returns a function
  * which executes the genes.
- * Return:
- *   If parsing fails retuns an object with an error property,
- *   otherwise returns an object witha  result property equal
- *   to the execution function.
+ * @param {module:tokenizer~Token[]} tokenStack - Immutable.js stack of tokens.
+ * @return {module:dnaInterpreter~DnaFunction}
  **/
-var parseDna = function(tokenStack) {
-  var geneResult, tokens, genes = [];
+module.exports.parseDna = function(tokenStack) {
+  var gene, genes;
 
-  geneResult = parseGene(tokenStack);
-  while (geneResult.error === null) {
-    genes.unshift(geneResult.result);
-    tokens = geneResult.tokens;
+  gene = parseGene(tokenStack);
+  while (!gene.is_err()) {
+    genes.unshift(gene.get_ok().dnaFunction);
+    tokenStack = gene.get_ok().tokens;
 
-    geneResult = parseGene(tokens);
+    gene = parseGene(tokenStack);
   }
 
-  if (geneResult.error.payload.value === "") {
-    return _createSuccess(function(sysvars) {
-      genes.forEach(function(gene) {
-        gene(sysvars);
-      });
+  return function(sysvars) {
+    genes.forEach(function(gene) {
+      gene(sysvars);
     });
-  }
-
-  return _createError(geneResult.error);
+  };
 };
-
-module.exports = {
-  parseNumber        : parseNumber,
-  parseOperation     : parseOperation,
-  parseSysvar        : parseSysvar,
-  parseSysvarAddr    : parseSysvarAddr,
-  parseExpression    : parseExpression,
-  parseBody          : parseBody,
-  parseBoolOperation : parseBoolOperation,
-  parseCond          : parseCond,
-  parseGene          : parseGene,
-  parseDna           : parseDna
-};
-
-
-
-
-
-
 

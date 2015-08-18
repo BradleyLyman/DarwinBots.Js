@@ -17,9 +17,12 @@
   },
   "homepage": "https://github.com/BradLyman/DarwinBots.Js#readme",
   "devDependencies": {
+    "diveSync": "^0.3.0",
     "nodeunit": "^0.9.1"
   },
   "dependencies": {
-    "immutable": "^3.7.4"
+    "immutable": "^3.7.4",
+    "object-assign": "^3.0.0",
+    "object-result": "^1.0.0"
   }
 }

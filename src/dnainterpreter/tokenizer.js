@@ -1,20 +1,42 @@
+/**
+ * This module performs the first-pass of the compilation process --
+ * transforming a raw string of DarwinBot's dna source into an array
+ * of Tokens.
+ * @module tokenizer
+ **/
+
 var Immutable = require('immutable');
 
+/**
+ * @typedef Line_Descriptor
+ * @type {Object}
+ * @property {Number} lineNum
+ * @property {Array.<String>} token_values
+ **/
+
+/**
+ * @typedef Token
+ * @type {Object}
+ * @property {Number} lineNum - line number that the token was originally on
+ * @property {String} value   - token's value as a plain string
+ **/
+
+var _splitOnLines =
 /**
  * Takes raw source code as a string and returns
  * the code split up as lines with corresponding line
  * numbers.
- * Returns;
- *   List of objects of the form { lineNum: n, tokens: [] }
+ * @param {String} source - Source code for the bot's dna.
+ * @return {Array.<module:tokenizer~Line_Descriptor>}
  **/
-var _splitOnLines = function(sourceAsString) {
-  var rawSplit = sourceAsString.split("\n");
+module.exports._private.splitOnLines = function(source) {
+  var rawSplit = source.split("\n");
 
   return rawSplit
     .map(function(line, i) {
       return {
-        lineNum : i+1,
-        tokens  : line.match(/\S+/g)
+        lineNum      : i+1,
+        token_values : line.match(/\S+/g)
       };
     })
     .filter(function(rowObj) {
@@ -22,13 +44,14 @@ var _splitOnLines = function(sourceAsString) {
     });
 };
 
+var _linesToTokenStack =
 /**
- * Takes the list of line objects output by _splitOnLines
+ * Takes the Array of {@link Line_Descriptor} output by splitOnLines
  * and transforms it into a list of token objects.
- * Returns:
- *   List of objects of the form { lineNum: n, token: [] }.
+ * @param {Array.<Line_Descriptor>} lineTokens - Array of tokens on each line.
+ * @return {Array.<Token>} Single array of tokens.
  **/
-var _linesToTokenStack = function(lineTokens) {
+module.exports._private.linesToTokenStack = function(lineTokens) {
   var tokens = [];
 
   tokens.unshift({
@@ -37,10 +60,10 @@ var _linesToTokenStack = function(lineTokens) {
   });
 
   lineTokens.forEach(function(lineToken) {
-    lineToken.tokens.forEach(function(token) {
+    lineToken.tokens_values.forEach(function(value) {
       tokens.unshift({
         lineNum : lineToken.lineNum,
-        value   : token
+        value   : value
       });
     });
   });
@@ -49,27 +72,11 @@ var _linesToTokenStack = function(lineTokens) {
 };
 
 /**
- * Internal module functions, exported for testing.
- **/
-module.exports._private = {
-  splitOnLines      : _splitOnLines,
-  linesToTokenStack : _linesToTokenStack
-};
-
-/**
- * The tokenize function which takes the source code and returns
- * a Stack of tokens where the top of the stack is the bottom of
- * the file.
+ * Transforms raw source code into a list of easily parsable tokens.
+ * @param {String} source - DarwinBots Dna source
+ * @return {module:tokenizer~Token[]} Token stack.
  **/
 module.exports.tokenize = function(source) {
   return _linesToTokenStack(_splitOnLines(source));
 };
-
-
-
-
-
-
-
-
 
