@@ -21,6 +21,11 @@ var Immutable = require('immutable');
  * @property {String} value   - token's value as a plain string
  **/
 
+/**
+ * Contains module's private methods, exported for testing.
+ **/
+module.exports._private = {};
+
 var _splitOnLines =
 /**
  * Takes raw source code as a string and returns
@@ -40,7 +45,7 @@ module.exports._private.splitOnLines = function(source) {
       };
     })
     .filter(function(rowObj) {
-      return rowObj.tokens !== null;
+      return rowObj.token_values !== null;
     });
 };
 
@@ -60,7 +65,7 @@ module.exports._private.linesToTokenStack = function(lineTokens) {
   });
 
   lineTokens.forEach(function(lineToken) {
-    lineToken.tokens_values.forEach(function(value) {
+    lineToken.token_values.forEach(function(value) {
       tokens.unshift({
         lineNum : lineToken.lineNum,
         value   : value

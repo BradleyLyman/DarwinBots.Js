@@ -7,7 +7,7 @@ module.exports.testSplitOnLines = function(test) {
   var tokenizedLines = tokenizer._private.splitOnLines(validSource);
 
   test.equals(tokenizedLines.length, 10, "validSource should split into 10 lines");
-  test.equals(tokenizedLines[4].tokens[0], "start", "line 5 should be the start keyword");
+  test.equals(tokenizedLines[4].token_values[0], "start", "line 5 should be the start keyword");
   test.done();
 };
 
