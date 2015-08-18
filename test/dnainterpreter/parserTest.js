@@ -7,24 +7,24 @@ var Token = function(valueString, lineNum) {
 
 module.exports.testParseNumber = {
   validNumber : function(test) {
-    var numberCmd = parser.parseNumber(Token("1253")).result;
+    var numberCmd = parser._private.parseNumber(Token("1253")).get_ok();
 
     test.equals(numberCmd(), 1253, "parsed number function should return the number's value");
     test.done();
   },
 
   invalidNumber : function(test) {
-    var result = parser.parseNumber(Token("aoeu"));
+    var result = parser._private.parseNumber(Token("aoeu"));
 
-    test.ok(result.error, "Error expected");
-    test.equals(result.error.lineNum, 5, "Expected result payload to contain token");
+    test.ok(result.is_err(), "Error expected");
+    test.equals(result.get_err().lineNum, 5, "Expected result payload to contain token");
     test.done();
   }
 };
 
 module.exports.testParseSysvar = {
   validSysvar : function(test) {
-    var sysvarCmd = parser.parseSysvar(Token("*.nrg")).result,
+    var sysvarCmd = parser._private.parseSysvar(Token("*.nrg")).get_ok(),
         sysvars   = {};
 
     test.equals(sysvarCmd(sysvars), 0, "uninitialized sysvars equal 0");
@@ -36,33 +36,35 @@ module.exports.testParseSysvar = {
   },
 
   invalidSysvar : function(test) {
-    var result = parser.parseSysvar(Token(".nrg"));
+    var result = parser._private.parseSysvar(Token(".nrg"));
 
-    test.ok(result.error, "parsing an invalid sysvar token sohuld result in an error");
+    test.ok(result.is_err(), "parsing an invalid sysvar token sohuld result in an error");
     test.done();
   }
 };
 
 module.exports.testParseSysvarAddr = {
   validSysvarAddr : function(test) {
-    var sysvarCmd = parser.parseSysvarAddr(Token(".nrg")).result;
+    var sysvarCmd = parser._private.parseSysvarAddr(Token(".nrg")).get_ok();
 
     test.equals(sysvarCmd(), "nrg", "Expected sysvar name to be returned");
     test.done();
   },
 
   invalidSysvarAddr : function(test) {
-    var result = parser.parseSysvarAddr(Token("aoeu"));
+    var result = parser._private.parseSysvarAddr(Token("aoeu"));
 
-    test.ok(result.error, "Expected an error when parsing invalid sysvar");
+    test.ok(result.is_err(), "Expected an error when parsing invalid sysvar");
     test.done();
   }
 };
 
 var binOpTests = function(test, cmdString, testDescriptors) {
   testDescriptors.forEach(function(descriptor) {
-    var cmd = parser.parseOperation(Token(cmdString)).result ||
-              parser.parseBoolOperation(Token(cmdString)).result,
+    var cmd = parser._private.parseOperation(Token(cmdString))
+                .or_else(function() {
+                  return parser._private.parseBoolOperation(Token(cmdString));
+                }).get_ok(),
         res = cmd(descriptor.a, descriptor.b);
 
     test.equals(res, descriptor.result,
@@ -187,8 +189,8 @@ var expressionStrings = {
 var _testExpressions = function(test, testDescriptors) {
   testDescriptors.forEach(function(descriptor) {
     var tokens       = tokenizer.tokenize(descriptor.source),
-        result       = parser.parseExpression(tokens),
-        cmd          = result.result;
+        result       = parser._private.parseExpression(tokens),
+        cmd          = result.get_ok().dnaFunction;
 
     test.equals(cmd(), descriptor.result,
       "expected result to be " + descriptor.result + " but got " + cmd());
@@ -199,9 +201,9 @@ var _testExpressions = function(test, testDescriptors) {
 module.exports.testParseExpression = {
   invalidExpression : function(test) {
     var tokens = tokenizer.tokenize(expressionStrings.invalid),
-        result = parser.parseExpression(tokens);
+        result = parser._private.parseExpression(tokens);
 
-    test.ok(result.error, "Expected an error when parsing a malformed expression");
+    test.ok(result.get_err(), "Expected an error when parsing a malformed expression");
     test.done();
   },
 
@@ -215,7 +217,7 @@ module.exports.testParseExpression = {
 
   readSysvarExpression : function(test)  {
     var tokens = tokenizer.tokenize(expressionStrings.readSysvar),
-        cmd    = parser.parseExpression(tokens).result;
+        cmd    = parser._private.parseExpression(tokens).get_ok().dnaFunction;
 
     test.equals(cmd({ nrg : 10}), 50, "Expected expression to equal nrg * 5");
     test.done();
@@ -223,7 +225,7 @@ module.exports.testParseExpression = {
 
   storeSysvar : function(test) {
     var tokens  = tokenizer.tokenize(expressionStrings.storeSysvar),
-        cmd     = parser.parseExpression(tokens).result,
+        cmd     = parser._private.parseExpression(tokens).get_ok().dnaFunction,
         sysvars = {};
 
     test.equals(cmd(sysvars), 10, "sysvar value should be returned from store expression");
@@ -241,14 +243,14 @@ var bodySources = {
 var bodyTests = function(test, testDescriptors) {
   testDescriptors.forEach(function(descriptor) {
     var tokens  = tokenizer.tokenize(descriptor.source),
-        result  = parser.parseBody(tokens),
+        result  = parser._private.parseBody(tokens),
         sysvars = {};
 
-    test.ok(!result.error,
+    test.ok(!result.is_err(),
       "Failed to parse body with source: " + descriptor.source + "\n" +
-      "Error was: " + result.error);
+      "Error was: " + result.get_err());
 
-    result.result(sysvars);
+    result.get_ok().dnaFunction(sysvars);
     Object.getOwnPropertyNames(descriptor.expectedSysvars)
       .forEach(function(sysvarName) {
         test.equals(descriptor.expectedSysvars[sysvarName], sysvars[sysvarName],
@@ -263,20 +265,17 @@ var bodyTests = function(test, testDescriptors) {
 module.exports.testParseBody = {
   noStop : function(test) {
     var tokens = tokenizer.tokenize(bodySources.noStop),
-        result = parser.parseBody(tokens);
+        result = parser._private.parseBody(tokens);
 
-    test.ok(result.error, "expected an error when parsing the body");
-    test.equals(result.error.payload.value, "store", "Expected the error to contain the offending token");
+    test.ok(result.is_err(), "expected an error when parsing the body");
     test.done();
   },
 
   noStart : function(test) {
     var tokens = tokenizer.tokenize(bodySources.noStart),
-        result = parser.parseBody(tokens);
+        result = parser._private.parseBody(tokens);
 
-    test.ok(result.error, "Expected error when parsing body");
-    test.equals(result.error.payload.value, "", "Expected error to contain offending token");
-    test.equals(result.error.payload.lineNum, 1, "Expected error to contain proper line number");
+    test.ok(result.get_err(), "Expected error when parsing body");
     test.done();
   },
 
@@ -306,14 +305,14 @@ var condSources = {
 var condTests = function(test, testDescriptors) {
   testDescriptors.forEach(function(descriptor) {
     var tokens  = tokenizer.tokenize(descriptor.source),
-        result  = parser.parseCond(tokens),
+        result  = parser._private.parseCond(tokens),
         sysvars = descriptor.sysvars;
 
-    test.ok(!result.error,
+    test.ok(!result.is_err(),
       "Failed to parse cond with source: " + descriptor.source + "\n" +
-      "Error was: " + result.error);
+      "Error was: " + result.get_err());
 
-    test.equals(result.result(sysvars), descriptor.result,
+    test.equals(result.get_ok().dnaFunction(sysvars), descriptor.result,
       "Expected " + descriptor.result + " but got " + !descriptor.result +
       "\n source: " + descriptor.source);
   });
@@ -323,20 +322,17 @@ var condTests = function(test, testDescriptors) {
 module.exports.testParseCond = {
   noStop : function(test) {
     var tokens = tokenizer.tokenize(condSources.noStart),
-        result = parser.parseCond(tokens);
+        result = parser._private.parseCond(tokens);
 
-    test.ok(result.error, "expected an error when parsing cond");
-    test.equals(result.error.payload.value, ">", "Expected the error to contain the offending token");
+    test.ok(result.is_err(), "expected an error when parsing cond");
     test.done();
   },
 
   noStart : function(test) {
     var tokens = tokenizer.tokenize(condSources.noCond),
-        result = parser.parseCond(tokens);
+        result = parser._private.parseCond(tokens);
 
-    test.ok(result.error, "Expected error when parsing cond");
-    //test.equals(result.error.payload.value, "", "Expected error to contain offending token");
-    //test.equals(result.error.payload.lineNum, 1, "Expected error to contain proper line number");
+    test.ok(result.is_err(), "Expected error when parsing cond");
     test.done();
   },
 
@@ -360,7 +356,7 @@ var geneSources = {
 module.exports.testParseGene = {
   activeGene : function(test) {
     var tokens = tokenizer.tokenize(geneSources.activeGene),
-        geneCmd = parser.parseGene(tokens).result,
+        geneCmd = parser._private.parseGene(tokens).get_ok().dnaFunction,
         sysvars = {};
 
     geneCmd(sysvars);
@@ -371,7 +367,7 @@ module.exports.testParseGene = {
 
   inactiveGene : function(test) {
     var tokens = tokenizer.tokenize(geneSources.inactiveGene),
-        geneCmd = parser.parseGene(tokens).result,
+        geneCmd = parser._private.parseGene(tokens).get_ok().dnaFunction,
         sysvars = { up : 10, tieval : 33 };
 
     geneCmd(sysvars);

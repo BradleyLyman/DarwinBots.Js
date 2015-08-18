@@ -67,6 +67,12 @@ var _lessOrEqual = function(a, b) {
   return _validateNumber(a) <= _validateNumber(b);
 };
 
+/**
+ * Contains all of the dnaInterpreter's private methods,
+ * exported for testing.
+ **/
+module.exports._private = {};
+
 var parseNumber =
 /**
  * Parses the token's value for the integer it represents.
@@ -134,8 +140,8 @@ var parseValue =
  **/
 module.exports._private.parseValue = function(token) {
   return parseSysvarAddr(token)
-    .or_else(parseSysvar(token))
-    .or_else(parseNumber(token));
+    .or_else(function() { return parseSysvar(token); })
+    .or_else(function() { return parseNumber(token); });
 };
 
 var parseOperation =
@@ -223,7 +229,7 @@ module.exports._private.parseStatement = function(tokenStack) {
     .and_then(function(dnaFunction) {
       return Ok({ dnaFunction : dnaFunction, tokens : tokenStack.shift() });
     })
-    .or_else(parseExpression(tokenStack));
+    .or_else(function() { return parseExpression(tokenStack); });
 };
 
 parseExpression =
@@ -241,7 +247,7 @@ module.exports._private.parseExpression = function(tokenStack) {
       opDnaFunc, dnaFuncA, dnaFuncB;
 
   operation = parseOperation(currentToken)
-    .or_else(parseBoolOperation(currentToken));
+    .or_else(function() { return parseBoolOperation(currentToken); });
   if (operation.is_err()) {
     return operation;
   }
@@ -259,7 +265,7 @@ module.exports._private.parseExpression = function(tokenStack) {
   }
 
   tokenStack = resultB.get_ok().tokens;
-  opDnaFunc  = operation.get_ok().dnaFunction;
+  opDnaFunc  = operation.get_ok();
   dnaFuncA   = resultA.get_ok().dnaFunction;
   dnaFuncB   = resultB.get_ok().dnaFunction;
   return Ok({
@@ -299,7 +305,7 @@ module.exports._private.parseBody = function(tokenStack) {
     expression = parseExpression(tokenStack);
   }
 
-  token = resultTokens.peek();
+  token = tokenStack.peek();
   if (token.value !== "start") {
     return Err("'start' token expected on line " + token.lineNum +
                " before " + token.value);
@@ -327,8 +333,8 @@ module.exports._private.parseCond = function(tokenStack) {
       expression;
 
   if (tokenStack.peek().value !== "start") {
-    return Err("Expected 'start' token on line " + token.lineNum +
-               " before " + token.value);
+    return Err("Expected 'start' token on line " + tokenStack.peek().lineNum +
+               " before " + tokenStack.peek().value);
   }
   tokenStack = tokenStack.shift();
 
@@ -341,8 +347,8 @@ module.exports._private.parseCond = function(tokenStack) {
   }
 
   if (tokenStack.peek().value !== "cond") {
-    return Err("'cond' token expected on line " + token.lineNum +
-               " before " + token.value);
+    return Err("'cond' token expected on line " + tokenStack.peek().lineNum +
+               " before " + tokenStack.peek().value);
   }
 
   return Ok({
