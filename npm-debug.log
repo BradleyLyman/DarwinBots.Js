@@ -1,0 +1,24 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/bin/npm', 'run', 'tests' ]
+2 info using npm@2.14.0
+3 info using node@v0.12.7
+4 verbose stack Error: missing script: tests
+4 verbose stack     at run (/usr/lib/node_modules/npm/lib/run-script.js:142:19)
+4 verbose stack     at /usr/lib/node_modules/npm/lib/run-script.js:58:5
+4 verbose stack     at /usr/lib/node_modules/npm/node_modules/read-package-json/read-json.js:345:5
+4 verbose stack     at checkBinReferences_ (/usr/lib/node_modules/npm/node_modules/read-package-json/read-json.js:309:45)
+4 verbose stack     at final (/usr/lib/node_modules/npm/node_modules/read-package-json/read-json.js:343:3)
+4 verbose stack     at then (/usr/lib/node_modules/npm/node_modules/read-package-json/read-json.js:113:5)
+4 verbose stack     at /usr/lib/node_modules/npm/node_modules/read-package-json/read-json.js:300:12
+4 verbose stack     at evalmachine.<anonymous>:334:14
+4 verbose stack     at /usr/lib/node_modules/npm/node_modules/read-package-json/node_modules/graceful-fs/graceful-fs.js:102:5
+4 verbose stack     at FSReqWrap.oncomplete (evalmachine.<anonymous>:95:15)
+5 verbose cwd /home/brad/projects/DarwinBots.js
+6 error Linux 4.1.6-1-ARCH
+7 error argv "node" "/usr/bin/npm" "run" "tests"
+8 error node v0.12.7
+9 error npm  v2.14.0
+10 error missing script: tests
+11 error If you need help, you may report this error at:
+11 error     <https://github.com/npm/npm/issues>
+12 verbose exit [ 1, true ]
