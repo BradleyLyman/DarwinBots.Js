@@ -2,39 +2,30 @@
 
 DNA will be specified in BNF-like format.
 
-* \* indicates that zero or more of the following terms can be present
-* ? indicates that the term may not exist
-* values within "" indicate that the literal value is expected in code
-
 ----
 
+```HTML
+<dna>  ::= <gene>*
+<gene> ::= <conditional-block> <body-block>
 
 
+<conditional-block>   ::= "cond" <cond-statement-list> "start"
+<cond-statement-list> ::=
+  <cond-statement> |
+  <cond-statement> <opt-and-or> <cond-statement-list>
+
+<opt-and-or>     ::= '"' | 'and' | 'or'
+<cond-statement> ::= <expression> <bool-op> <expression>
+
+
+<body-block>          ::= "start" <body-statement-list> "stop"
+<body-statement-list> ::=
+  <body-statement> | <body-statement> <body-statement-list>
+
+<body-statement> ::= <var> ':=' <expression>
+<var>            ::= <sysvar> | <user-var>
+<expression>     ::= <term> | <term> <bin-op> <expression>
+<term>           ::= <opt-minus> <value>
+<value>          ::= <literal> | <var>
 ```
-[Gene]        ::= [Conditional] & ?[Body]
 
-[Conditional] ::= ["cond"] & *[CondExpr] & ["start" | "stop" | "end"]
-
-[CondExpr]    ::= [StackOp] | [BoolOp];
-
-[BoolOp]      ::= [">" | "<" | "=" | "!=" | ">=" | "<="]
-
-[StackOp]     ::= [Literal] | [Sysvar] | ["add" | "sub" | "mul" | "div" | "store"]
-
-[Body]        ::= ["start"] & *[StackOp] & ["end"];
-
-[Literal]     ::= *[0-9]
-
-[Sysvar]      ::= ?["*"] + ["."] + [Sysvar Id]
-```
-
-----
-
-Example:
-
-```
-cond
-  4 3 >
-start
-  3 4 mult
-end
