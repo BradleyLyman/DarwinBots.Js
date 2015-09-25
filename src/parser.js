@@ -21,7 +21,7 @@ module.exports = function(source) {
     }
   };
 
-  var expr = parseCondExpression(srcDesc);
+  var expr = parseGene(srcDesc);
 
   if (expr.is_err()) {
     return expr.get_err();
@@ -31,6 +31,18 @@ module.exports = function(source) {
 };
 
 var parseGene = function(srcDesc) {
+  var condSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+4);
+  if (condSlice !== 'cond') {
+    return Err( "Expected keyword 'cond' and index: " + srcDesc.cursorIndex );
+  } else {
+    srcDesc.cursorIndex += 4;
+  }
+
+  var condExpression = parseCondExpression(srcDesc);
+  if (condExpression.is_err()) {
+    return condExpression;
+  }
+
   var startSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+5);
   if (startSlice !== 'start') {
     return Err( "Expected keyword 'start' at index: " + srcDesc.cursorIndex );
@@ -53,7 +65,7 @@ var parseGene = function(srcDesc) {
     srcDesc.cursorIndex += 4;
   }
 
-  return Ok( Ast.createGene(bodyExprs) );
+  return Ok( Ast.createGene(condExpression.get_ok(), bodyExprs) );
 };
 
 var parseCondExpression = function(srcDesc) {

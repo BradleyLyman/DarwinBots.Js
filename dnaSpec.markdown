@@ -7,7 +7,7 @@ DNA will be specified in BNF-like format.
 ```HTML
 
 <dna> ::= {<gene>}
-<gene> ::= start {<body-expression>} stop
+<gene> ::= cond <cond-expression> start {<body-expression>} stop
 
 
 <body-expression> ::= <variable> <- <expression> ;

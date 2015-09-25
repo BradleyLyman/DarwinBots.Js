@@ -1,11 +1,15 @@
 
-module.exports.createGene = function(bodyExpressions) {
+module.exports.createGene = function(condExpression, bodyExpressions) {
   return {
     type            : 'Gene',
+    condExpression  : condExpression,
     bodyExpressions : bodyExpressions,
     toString        : function() {
-      var body = "Gene(\n  Body(\n";
+      var body = "Gene(\n  Cond(\n";
 
+      body += "    " + condExpression.toString() + "\n  )\n";
+
+      body += "  Body(\n";
       bodyExpressions.forEach(function(expression) {
         body += "    " + expression.toString() + "\n";
       });
