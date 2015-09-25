@@ -16,6 +16,72 @@ module.exports.createGene = function(bodyExpressions) {
   };
 };
 
+module.exports.createEqualExpr = function(exp1, exp2) {
+  return {
+    type     : 'EqualExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "EqualExpr(" + exp1.toString() + " = " + exp2.toString() + ")";
+    }
+  };
+};
+
+module.exports.createLessExpr = function(exp1, exp2) {
+  return {
+    type     : 'LessExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "LessExpr(" + exp1.toString() + " < " + exp2.toString() + ")";
+    }
+  };
+};
+
+module.exports.createGreaterExpr = function(exp1, exp2) {
+  return {
+    type     : 'GreaterExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "GreaterExpr(" + exp1.toString() + " > " + exp2.toString() + ")";
+    }
+  };
+};
+
+module.exports.createGEExpr = function(exp1, exp2) {
+  return {
+    type     : 'GEExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "GEExpr(" + exp1.toString() + " >= " + exp2.toString() + ")";
+    }
+  };
+};
+
+module.exports.createLEExpr = function(exp1, exp2) {
+  return {
+    type     : 'LEExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "LEExpr(" + exp1.toString() + " <= " + exp2.toString() + ")";
+    }
+  };
+};
+
+module.exports.createNEExpr = function(exp1, exp2) {
+  return {
+    type     : 'NEExpr',
+    exp1     : exp1,
+    exp2     : exp2,
+    toString : function() {
+      return "NEExpr(" + exp1.toString() + " != " + exp2.toString() + ")";
+    }
+  };
+};
+
 module.exports.createBodyExpression = function(variable, expression) {
   return {
     type       : 'BodyExpression',

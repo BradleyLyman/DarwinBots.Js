@@ -19,8 +19,8 @@ DNA will be specified in BNF-like format.
 <variable>        ::= (\w+)
 <number>          ::= \d*(\.\d*)?
 
-<bool-expression> ::= <expression> <bool-op> <expression>
-<bool-op>         ::= [> < = >= <= !=]
+<bool-expression> ::= <expression> > <expression>
+<bool-op> ::= [> < = >= <= !=]
 
 
 ```

@@ -21,7 +21,7 @@ module.exports = function(source) {
     }
   };
 
-  var expr = parseGene(srcDesc);
+  var expr = parseBoolExpression(srcDesc);
 
   if (expr.is_err()) {
     return expr.get_err();
@@ -54,6 +54,42 @@ var parseGene = function(srcDesc) {
   }
 
   return Ok( Ast.createGene(bodyExprs) );
+};
+
+var parseBoolExpression = function(srcDesc) {
+  return parseExpression(srcDesc)
+    .and_then(function(expression1) {
+      var idx       = srcDesc.cursorIndex;
+      var currSlice = srcDesc.src.slice(idx, idx+2);
+      var results = currSlice.match(/(=)|(!=)|([\><]\=?)/);
+      if (!results || results.index !== 0) {
+        return Err( "Expected boolean operator at index: " + srcDesc.cursorIndex );
+      }
+
+      srcDesc.cursorIndex += results[0].length;
+
+      return parseExpression(srcDesc).and_then(function(expression2) {
+        switch (results[0]) {
+          case '=':
+            return Ok( Ast.createEqualExpr(expression1, expression2) );
+
+          case '<':
+            return Ok( Ast.createLessExpr(expression1, expression2) );
+
+          case '>':
+            return Ok( Ast.createGreaterExpr(expression1, expression2) );
+
+          case '>=':
+            return Ok( Ast.createGEExpr(expression1, expression2) );
+
+          case '<=':
+            return Ok( Ast.createLEExpr(expression1, expression2) );
+
+          case '!=':
+            return Ok( Ast.createNEExpr(expression1, expression2) );
+        }
+      });
+    });
 };
 
 var parseBodyExpression = function(srcDesc) {
@@ -196,7 +232,7 @@ var parseNumber = function(srcDesc) {
 
   var newIdx = srcDesc.cursorIndex + results[0].length;
   var next = srcDesc.src[newIdx];
-  if (next && !next.toString().match(/[\+\-\*\/\^\)\;]/)) {
+  if (next && !next.toString().match(/[\+\-\*\/\^\)\;\><\=\!]/)) {
     return Err( "Error parsing number at index " + newIdx );
   }
 
