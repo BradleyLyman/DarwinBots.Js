@@ -1,4 +1,5 @@
 var Ast    = require('./ast.js'),
+    sourceManager = require('./sourceManager.js'),
     Result = require('object-result'),
     Ok     = Result.Ok,
     Err    = Result.Err;
@@ -9,19 +10,9 @@ var Ast    = require('./ast.js'),
  * @return Result -- Ok payload is just the number.
  **/
 module.exports = function(source) {
-  var cleanSource = source.split(/\s+/)
-    .filter(function(tkn) { return tkn !== ''; })
-    .join('');
+  var srcMgr = sourceManager(source.trim());
 
-  var srcDesc = {
-    cursorIndex : 0,
-    src         : cleanSource,
-    peek        : function() {
-      return this.src[this.cursorIndex];
-    }
-  };
-
-  var expr = parseGene(srcDesc);
+  var expr = parseBodyExpression(srcMgr);
 
   if (expr.is_err()) {
     return expr.get_err();
@@ -30,112 +21,119 @@ module.exports = function(source) {
   return expr.get_ok().toString();
 };
 
-var parseGene = function(srcDesc) {
-  var condSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+4);
+var parseGene = function(srcMgr) {
+  srcMgr.eatWhitespace();
+
+  var condSlice = srcMgr.src.slice(srcMgr.cursor, srcMgr.cursor+4);
   if (condSlice !== 'cond') {
-    return Err( "Expected keyword 'cond' and index: " + srcDesc.cursorIndex );
+    return Err( "Expected keyword 'cond' and index: " + srcMgr.cursor );
   } else {
-    srcDesc.cursorIndex += 4;
+    srcMgr.cursor += 4;
   }
 
-  var condExpression = parseCondExpression(srcDesc);
+  srcMgr.eatWhitespace();
+  var condExpression = parseCondExpression(srcMgr);
   if (condExpression.is_err()) {
     return condExpression;
   }
 
-  var startSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+5);
+  srcMgr.eatWhitespace();
+  var startSlice = srcMgr.src.slice(srcMgr.cursor, srcMgr.cursor+5);
   if (startSlice !== 'start') {
-    return Err( "Expected keyword 'start' at index: " + srcDesc.cursorIndex );
+    return Err( "Expected keyword 'start' at index: " + srcMgr.cursor );
   } else {
-    srcDesc.cursorIndex += 5;
+    srcMgr.cursor += 5;
   }
 
+  srcMgr.eatWhitespace();
   var bodyExprs = [];
-  var bodyExpression = parseBodyExpression(srcDesc);
+  var bodyExpression = parseBodyExpression(srcMgr);
   while (!bodyExpression.is_err()) {
     bodyExprs.push(bodyExpression.get_ok());
 
-    bodyExpression = parseBodyExpression(srcDesc);
+    srcMgr.eatWhitespace();
+    bodyExpression = parseBodyExpression(srcMgr);
   }
 
-  var stopSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+4);
+  srcMgr.eatWhitespace();
+  var stopSlice = srcMgr.src.slice(srcMgr.cursor, srcMgr.cursor+4);
   if (stopSlice !== 'stop') {
-    return Err( "Expected keyword 'stop' at index: " + srcDesc.cursorIndex );
+    return Err( "Expected keyword 'stop' at index: " + srcMgr.cursor );
   } else {
-    srcDesc.cursorIndex += 4;
+    srcMgr.cursor += 4;
   }
 
   return Ok( Ast.createGene(condExpression.get_ok(), bodyExprs) );
 };
 
-var parseCondExpression = function(srcDesc) {
-  return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
-    if (srcDesc.peek() !== ';') {
-      return Err( "Expected ';' at index: " + srcDesc.cursorIndex );
+var parseCondExpression = function(srcMgr) {
+  return parseAndPhrase(srcMgr).and_then(function(andPhrase) {
+    if (srcMgr.peek() !== ';') {
+      return Err( "Expected ';' at index: " + srcMgr.cursor );
     } else {
-      srcDesc.cursorIndex++;
+      srcMgr.cursor++;
       // no need to modify the and-phrase, so return nothing
     }
   });
 };
 
-var parseAndPhrase = function(srcDesc) {
-  return parseOrPhrase(srcDesc).and_then(function(orPhrase) {
-    var idx = srcDesc.cursorIndex;
-    var srcSlice = srcDesc.src.slice(idx, idx+3);
+var parseAndPhrase = function(srcMgr) {
+  return parseOrPhrase(srcMgr).and_then(function(orPhrase) {
+    var idx = srcMgr.cursor;
+    var srcSlice = srcMgr.src.slice(idx, idx+3);
 
     if (srcSlice === 'and') {
-      srcDesc.cursorIndex += 3;
-      return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
+      srcMgr.cursor += 3;
+      return parseAndPhrase(srcMgr).and_then(function(andPhrase) {
         return Ok( Ast.createAndPhrase(orPhrase, andPhrase) );
       });
     }
   });
 };
 
-var parseOrPhrase = function(srcDesc) {
-  return parseBoolGroup(srcDesc).and_then(function(boolGroup) {
-    var idx = srcDesc.cursorIndex;
-    var srcSlice = srcDesc.src.slice(idx, idx+2);
+var parseOrPhrase = function(srcMgr) {
+  return parseBoolGroup(srcMgr).and_then(function(boolGroup) {
+    var idx = srcMgr.cursor;
+    var srcSlice = srcMgr.src.slice(idx, idx+2);
 
     if (srcSlice === 'or') {
-      srcDesc.cursorIndex += 2;
-      return parseOrPhrase(srcDesc).and_then(function(orPhrase) {
+      srcMgr.cursor += 2;
+      return parseOrPhrase(srcMgr).and_then(function(orPhrase) {
         return Ok( Ast.createOrPhrase(boolGroup, orPhrase) );
       });
     }
   });
 };
 
-var parseBoolGroup = function(srcDesc) {
-  if (srcDesc.peek() === '(') {
-    srcDesc.cursorIndex++;
+var parseBoolGroup = function(srcMgr) {
+  if (srcMgr.peek() === '(') {
+    srcMgr.cursor++;
 
-    return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
-      if (srcDesc.peek() === ')') {
-        srcDesc.cursorIndex++;
+    return parseAndPhrase(srcMgr).and_then(function(andPhrase) {
+      if (srcMgr.peek() === ')') {
+        srcMgr.cursor++;
       } else {
-        return Err( "Expected ')' at index: " + srcDesc.cursorIndex );
+        return Err( "Expected ')' at index: " + srcMgr.cursor );
       }
     });
   } else {
-    return parseBoolExpression(srcDesc);
+    return parseBoolExpression(srcMgr);
   }
 };
 
-var parseBoolExpression = function(srcDesc) {
-  return parseExpression(srcDesc)
+var parseBoolExpression = function(srcMgr) {
+  return parseExpression(srcMgr)
     .and_then(function(expression1) {
-      var idx       = srcDesc.cursorIndex;
-      var currSlice = srcDesc.src.slice(idx, idx+2);
+      var idx       = srcMgr.cursor;
+      var currSlice = srcMgr.src.slice(idx, idx+2);
       var results = currSlice.match(/(=)|(!=)|([\><]\=?)/);
       if (!results || results.index !== 0) {
-        return Err( "Expected boolean operator at index: " + srcDesc.cursorIndex );
+        return Err( "Expected boolean operator at index: " + srcMgr.cursor );
       }
 
-      srcDesc.cursorIndex += results[0].length;
+      srcMgr.cursor += results[0].length;
 
-      return parseExpression(srcDesc).and_then(function(expression2) {
+      return parseExpression(srcMgr).and_then(function(expression2) {
         switch (results[0]) {
           case '=':
             return Ok( Ast.createEqualExpr(expression1, expression2) );
@@ -159,52 +157,53 @@ var parseBoolExpression = function(srcDesc) {
     });
 };
 
-var parseBodyExpression = function(srcDesc) {
-  return parseVariable(srcDesc)
+var parseBodyExpression = function(srcMgr) {
+  return parseVariable(srcMgr)
     .and_then(function(variable) {
       // if <- then this is a proper body expression
-      if (srcDesc.peek() === '<') {
-        srcDesc.cursorIndex++;
+      if (srcMgr.next() === '<') {
+        srcMgr.cursor++;
       } else {
-        return Err( "Expected '<' at index: " + srcDesc.cursorIndex );
+        return Err( srcMgr.errAtCursor("Expected '<'") );
       }
 
-      if (srcDesc.peek() === '-') {
-        srcDesc.cursorIndex++;
+      if (srcMgr.next() === '-') {
+        srcMgr.cursor++;
       } else {
-        return Err( "Expected '-' at index: " + srcDesc.cursorIndex );
+        return Err( srcMgr.errAtCursor("Expected '-'") );
       }
 
-      return parseExpression(srcDesc).and_then(function(expression) {
+      return parseExpression(srcMgr).and_then(function(expression) {
 
         // A body expression must end with a ;
-        if (srcDesc.peek() === ';') {
-          srcDesc.cursorIndex++;
+        if (srcMgr.next() === ';') {
+          srcMgr.cursor++;
           return Ok( Ast.createBodyExpression(variable, expression) );
         } else {
-          return Err( "Expected ';' at index: " + srcDesc.cursorIndex );
+          return Err( "Expected ';' at index: " + srcMgr.cursor );
         }
       });
     });
 };
 
-var parseExpression = function(srcDesc) {
-  return parseTerm(srcDesc)
+var parseExpression = function(srcMgr) {
+  return parseTerm(srcMgr)
     .and_then(function(term1) {
-      // if + then this is an add expr
-      if (srcDesc.peek() === '+') {
-        srcDesc.cursorIndex++;
 
-        return parseExpression(srcDesc).and_then(function(term2) {
+      // if + then this is an add expr
+      if (srcMgr.next() === '+') {
+        srcMgr.cursor++;
+
+        return parseExpression(srcMgr).and_then(function(term2) {
           return Ok( Ast.createAddExpr(term1, term2) );
         });
       }
 
       // if - then this is a sub expr
-      if (srcDesc.peek() === '-') {
-        srcDesc.cursorIndex++;
+      if (srcMgr.next() === '-') {
+        srcMgr.cursor++;
 
-        return parseExpression(srcDesc).and_then(function(term2) {
+        return parseExpression(srcMgr).and_then(function(term2) {
           return Ok( Ast.createSubExpr(term1, term2) );
         });
       }
@@ -213,23 +212,23 @@ var parseExpression = function(srcDesc) {
     });
 };
 
-var parseTerm = function(srcDesc) {
-  return parseFactor(srcDesc)
+var parseTerm = function(srcMgr) {
+  return parseFactor(srcMgr)
     .and_then(function(factor1) {
       // if * then this is a multiplication expression
-      if (srcDesc.peek() === '*') {
-        srcDesc.cursorIndex++;
+      if (srcMgr.next() === '*') {
+        srcMgr.cursor++;
 
-        return parseTerm(srcDesc).and_then(function(factor2) {
+        return parseTerm(srcMgr).and_then(function(factor2) {
           return Ok( Ast.createMulExpr(factor1, factor2) );
         });
       }
 
       // if / then this is a division expression
-      if (srcDesc.peek() === '/') {
-        srcDesc.cursorIndex++;
+      if (srcMgr.next() === '/') {
+        srcMgr.cursor++;
 
-        return parseTerm(srcDesc).and_then(function(factor2) {
+        return parseTerm(srcMgr).and_then(function(factor2) {
           return Ok( Ast.createDivExpr(factor1, factor2) );
         });
       }
@@ -238,55 +237,57 @@ var parseTerm = function(srcDesc) {
     });
 };
 
-var parseFactor = function(srcDesc) {
-  return parseUnary(srcDesc).and_then(function(unary) {
-    if (srcDesc.peek() === '^') {
-      srcDesc.cursorIndex++;
+var parseFactor = function(srcMgr) {
+  return parseUnary(srcMgr).and_then(function(unary) {
+    if (srcMgr.next() === '^') {
+      srcMgr.cursor++;
 
-      return parseFactor(srcDesc).and_then(function(factor) {
+      return parseFactor(srcMgr).and_then(function(factor) {
         return Ok( Ast.createPowExpr(unary, factor) );
       });
     }
   });
 };
 
-var parseUnary = function(srcDesc) {
-  if (srcDesc.peek() === '-') {
-    srcDesc.cursorIndex++;
+var parseUnary = function(srcMgr) {
+  if (srcMgr.next() === '-') {
+    srcMgr.cursor++;
 
-    return parseUnary(srcDesc).and_then(function(unary) {
+    return parseUnary(srcMgr).and_then(function(unary) {
       return Ok( Ast.createUnaryMinus(unary) );
     });
   }
 
-  return parseGroup(srcDesc);
+  return parseGroup(srcMgr);
 };
 
-var parseGroup = function(srcDesc) {
-  if (srcDesc.peek() === '(') {
-    srcDesc.cursorIndex++;
+var parseGroup = function(srcMgr) {
+  if (srcMgr.next() === '(') {
+    srcMgr.cursor++;
 
-    return parseExpression(srcDesc).and_then(function(expr) {
-      if (srcDesc.peek() !== ')') {
+    return parseExpression(srcMgr).and_then(function(expr) {
+      if (srcMgr.next() !== ')') {
         return Err(
-          "Expected a closing ')' at index " + (srcDesc.cursorIndex+1)
+          "Expected a closing ')' at index " + (srcMgr.cursor+1)
         );
       }
 
-      srcDesc.cursorIndex++;
+      srcMgr.cursor++;
     });
   }
 
-  return parseNumber(srcDesc)
+  return parseNumber(srcMgr)
     .or_else(function() {
-      return parseVariable(srcDesc);
+      return parseVariable(srcMgr);
     });
 };
 
-var parseNumber = function(srcDesc) {
+var parseNumber = function(srcMgr) {
+  srcMgr.eatWhitespace();
+
   var matcher = /((\d+)(\.\d*)?)|(\.\d*)/;
 
-  var currSrc = srcDesc.src.slice(srcDesc.cursorIndex);
+  var currSrc = srcMgr.src.slice(srcMgr.cursor);
   var results = currSrc.match(matcher);
   if (!results || results.index !== 0) {
     return Err( "Could not parse token as number" );
@@ -297,15 +298,17 @@ var parseNumber = function(srcDesc) {
     return Err( "Could not parse token as number" );
   }
 
-  srcDesc.cursorIndex += results[0].length;
+  srcMgr.cursor += results[0].length;
   return Ok( Ast.createNumber(value) );
 };
 
-var parseVariable = function(srcDesc) {
+var parseVariable = function(srcMgr) {
+  srcMgr.eatWhitespace();
+
   var preMatch = /stop|and|or/;
   var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
-  var currSrc = srcDesc.src.slice(srcDesc.cursorIndex);
+  var currSrc = srcMgr.src.slice(srcMgr.cursor);
 
   var results = currSrc.match(preMatch);
   if (results && results.index === 0) {
@@ -315,11 +318,11 @@ var parseVariable = function(srcDesc) {
   results = currSrc.match(matcher);
   if (!results || results.index !== 0) {
     return Err(
-      "could not parse variable starting at index " + (srcDesc.cursorIndex+1)
+      "could not parse variable starting at index " + (srcMgr.cursor+1)
     );
   }
 
-  srcDesc.cursorIndex += results[0].length;
+  srcMgr.cursor += results[0].length;
   return Ok( Ast.createVariable(results[0]) );
 };
 

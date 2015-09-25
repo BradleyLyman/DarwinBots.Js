@@ -1,9 +1,10 @@
-var stdin = process.stdin;
-
+var fs = require('fs');
 var parser = require('./src/parser.js');
 
-stdin.addListener('data', function(data) {
-  var result = parser(data.toString());
+fs.readFile('./demo.dbs', 'utf8', function(err, source) {
+  if (err) {
+    throw err;
+  }
 
-  console.log(result);
+  console.log(parser(source));
 });
