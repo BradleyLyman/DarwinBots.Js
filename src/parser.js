@@ -21,7 +21,7 @@ module.exports = function(source) {
     }
   };
 
-  var expr = parseBoolExpression(srcDesc);
+  var expr = parseCondExpression(srcDesc);
 
   if (expr.is_err()) {
     return expr.get_err();
@@ -54,6 +54,61 @@ var parseGene = function(srcDesc) {
   }
 
   return Ok( Ast.createGene(bodyExprs) );
+};
+
+var parseCondExpression = function(srcDesc) {
+  return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
+    if (srcDesc.peek() !== ';') {
+      return Err( "Expected ';' at index: " + srcDesc.cursorIndex );
+    } else {
+      srcDesc.cursorIndex++;
+      // no need to modify the and-phrase, so return nothing
+    }
+  });
+};
+
+var parseAndPhrase = function(srcDesc) {
+  return parseOrPhrase(srcDesc).and_then(function(orPhrase) {
+    var idx = srcDesc.cursorIndex;
+    var srcSlice = srcDesc.src.slice(idx, idx+3);
+
+    if (srcSlice === 'and') {
+      srcDesc.cursorIndex += 3;
+      return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
+        return Ok( Ast.createAndPhrase(orPhrase, andPhrase) );
+      });
+    }
+  });
+};
+
+var parseOrPhrase = function(srcDesc) {
+  return parseBoolGroup(srcDesc).and_then(function(boolGroup) {
+    var idx = srcDesc.cursorIndex;
+    var srcSlice = srcDesc.src.slice(idx, idx+2);
+
+    if (srcSlice === 'or') {
+      srcDesc.cursorIndex += 2;
+      return parseOrPhrase(srcDesc).and_then(function(orPhrase) {
+        return Ok( Ast.createOrPhrase(boolGroup, orPhrase) );
+      });
+    }
+  });
+};
+
+var parseBoolGroup = function(srcDesc) {
+  if (srcDesc.peek() === '(') {
+    srcDesc.cursorIndex++;
+
+    return parseAndPhrase(srcDesc).and_then(function(andPhrase) {
+      if (srcDesc.peek() === ')') {
+        srcDesc.cursorIndex++;
+      } else {
+        return Err( "Expected ')' at index: " + srcDesc.cursorIndex );
+      }
+    });
+  } else {
+    return parseBoolExpression(srcDesc);
+  }
 };
 
 var parseBoolExpression = function(srcDesc) {
@@ -230,18 +285,12 @@ var parseNumber = function(srcDesc) {
     return Err( "Could not parse token as number" );
   }
 
-  var newIdx = srcDesc.cursorIndex + results[0].length;
-  var next = srcDesc.src[newIdx];
-  if (next && !next.toString().match(/[\+\-\*\/\^\)\;\><\=\!]/)) {
-    return Err( "Error parsing number at index " + newIdx );
-  }
-
-  srcDesc.cursorIndex = newIdx;
+  srcDesc.cursorIndex += results[0].length;
   return Ok( Ast.createNumber(value) );
 };
 
 var parseVariable = function(srcDesc) {
-  var preMatch = /stop/;
+  var preMatch = /stop|and|or/;
   var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
   var currSrc = srcDesc.src.slice(srcDesc.cursorIndex);

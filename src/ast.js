@@ -16,6 +16,28 @@ module.exports.createGene = function(bodyExpressions) {
   };
 };
 
+module.exports.createAndPhrase = function(lhs, rhs) {
+  return {
+    type     : 'AndPhrase',
+    lhs      : lhs,
+    rhs      : rhs,
+    toString : function() {
+      return "AndPhrase(" + lhs.toString() + " and " + rhs.toString() + ")";
+    }
+  };
+};
+
+module.exports.createOrPhrase = function(lhs, rhs) {
+  return {
+    type     : 'OrPhrase',
+    lhs      : lhs,
+    rhs      : rhs,
+    toString : function() {
+      return "OrPhrase(" + lhs.toString() + " Or " + rhs.toString() + ")";
+    }
+  };
+};
+
 module.exports.createEqualExpr = function(exp1, exp2) {
   return {
     type     : 'EqualExpr',

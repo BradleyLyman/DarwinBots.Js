@@ -19,9 +19,12 @@ DNA will be specified in BNF-like format.
 <variable>        ::= (\w+)
 <number>          ::= \d*(\.\d*)?
 
-<bool-expression> ::= <expression> <bool-op> <expression>
+<cond-expression> ::= <and-phrase> ;
+<and-phrase>      ::= <or-phrase>  and <and-phrase> | <or-phrase>
+<or-phrase>       ::= <bool-group> or  <or-phrase> | <bool-group>
+<bool-group>      ::= <bool-expression> | ( <and-phrase> )
+<bool-term>       ::= <expression> <bool-op> <expression>
 <bool-op>         ::= [> < = >= <= !=]
-
 
 ```
 
