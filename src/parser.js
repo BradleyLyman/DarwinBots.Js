@@ -1,79 +1,9 @@
-var Result = require('object-result'),
+var Ast    = require('./ast.js'),
+    Result = require('object-result'),
     Ok     = Result.Ok,
     Err    = Result.Err;
 
-var createNumber = function(val) {
-  return {
-    type     : 'Number',
-    value    : val,
-    toString : function() { return "Number(" + val + ")"; }
-  };
-};
 
-var createDivExpr = function(factor1, factor2) {
-  return {
-    type : 'DivExpr',
-    factor1 : factor1,
-    factor2 : factor2,
-    toString : function() {
-      return "DivExpr(" + factor1.toString() + " / " + factor2.toString() + ")";
-    }
-  };
-};
-
-var createMulExpr = function(factor1, factor2) {
-  return {
-    type : 'MulExpr',
-    factor1 : factor1,
-    factor2 : factor2,
-    toString : function() {
-      return "MulExpr(" + factor1.toString() + " * " + factor2.toString() + ")";
-    }
-  };
-};
-
-var createAddExpr = function(term1, term2) {
-  return {
-    type : 'AddExpr',
-    term1 : term1,
-    term2 : term2,
-    toString : function() {
-      return "AddExpr(" + term1.toString() + " + " + term2.toString() + ")";
-    }
-  };
-};
-
-var createSubExpr = function(term1, term2) {
-  return {
-    type : 'SubExpr',
-    term1 : term1,
-    term2 : term2,
-    toString : function() {
-      return "SubExpr(" + term1.toString() + " - " + term2.toString() + ")";
-    }
-  };
-};
-
-var createPowExpr = function(base, exp) {
-  return {
-    type : 'PowExpr',
-    base : base,
-    exp  : exp,
-    toString : function() {
-      return "PowExpr(" + base.toString() + " ^ " + exp.toString() + ")";
-    }
-  };
-};
-
-var createVariable = function(name) {
-  return {
-    type : 'Variable',
-    name : name,
-    toString : function() {
-      return "Variable(" + name + ")";
-    }
-  };
-};
 
 /**
  * Parses the given string into a token representing the number.
@@ -102,7 +32,6 @@ module.exports = function(source) {
   return expr.get_ok().toString();
 };
 
-
 var parseExpression = function(srcDesc) {
   return parseTerm(srcDesc)
     .and_then(function(term1) {
@@ -111,7 +40,7 @@ var parseExpression = function(srcDesc) {
         srcDesc.cursorIndex++;
 
         return parseExpression(srcDesc).and_then(function(term2) {
-          return Ok( createAddExpr(term1, term2) );
+          return Ok( Ast.createAddExpr(term1, term2) );
         });
       }
 
@@ -120,7 +49,7 @@ var parseExpression = function(srcDesc) {
         srcDesc.cursorIndex++;
 
         return parseExpression(srcDesc).and_then(function(term2) {
-          return Ok( createSubExpr(term1, term2) );
+          return Ok( Ast.createSubExpr(term1, term2) );
         });
       }
 
@@ -136,7 +65,7 @@ var parseTerm = function(srcDesc) {
         srcDesc.cursorIndex++;
 
         return parseTerm(srcDesc).and_then(function(factor2) {
-          return Ok( createMulExpr(factor1, factor2) );
+          return Ok( Ast.createMulExpr(factor1, factor2) );
         });
       }
 
@@ -145,7 +74,7 @@ var parseTerm = function(srcDesc) {
         srcDesc.cursorIndex++;
 
         return parseTerm(srcDesc).and_then(function(factor2) {
-          return Ok( createDivExpr(factor1, factor2) );
+          return Ok( Ast.createDivExpr(factor1, factor2) );
         });
       }
 
@@ -159,7 +88,7 @@ var parseFactor = function(srcDesc) {
       srcDesc.cursorIndex++;
 
       return parseFactor(srcDesc).and_then(function(factor) {
-        return Ok( createPowExpr(unary, factor) );
+        return Ok( Ast.createPowExpr(unary, factor) );
       });
     }
   });
@@ -170,7 +99,7 @@ var parseUnary = function(srcDesc) {
     srcDesc.cursorIndex++;
 
     return parseUnary(srcDesc).and_then(function(unary) {
-      return Ok( createUnaryMinus(unary) );
+      return Ok( Ast.createUnaryMinus(unary) );
     });
   }
 
@@ -214,16 +143,16 @@ var parseNumber = function(srcDesc) {
 
   var newIdx = srcDesc.cursorIndex + results[0].length;
   var next = srcDesc.src[newIdx];
-  if (next && !next.toString().match(/[\+\-\*\/\^]/)) {
+  if (next && !next.toString().match(/[\+\-\*\/\^\)]/)) {
     return Err( "Error parsing number at index " + newIdx );
   }
 
   srcDesc.cursorIndex = newIdx;
-  return Ok( createNumber(value) );
+  return Ok( Ast.createNumber(value) );
 };
 
 var parseVariable = function(srcDesc) {
-  var matcher = /(\w+)/;
+  var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
   var currSrc = srcDesc.src.slice(srcDesc.cursorIndex);
   var results = currSrc.match(matcher);
@@ -234,7 +163,7 @@ var parseVariable = function(srcDesc) {
   }
 
   srcDesc.cursorIndex += results[0].length;
-  return Ok( createVariable(results[0]) );
+  return Ok( Ast.createVariable(results[0]) );
 };
 
 
