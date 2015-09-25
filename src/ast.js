@@ -1,4 +1,21 @@
 
+module.exports.createGene = function(bodyExpressions) {
+  return {
+    type            : 'Gene',
+    bodyExpressions : bodyExpressions,
+    toString        : function() {
+      var body = "Gene(\n  Body(\n";
+
+      bodyExpressions.forEach(function(expression) {
+        body += "    " + expression.toString() + "\n";
+      });
+
+      body += "  )\n)";
+      return body;
+    }
+  };
+};
+
 module.exports.createBodyExpression = function(variable, expression) {
   return {
     type       : 'BodyExpression',

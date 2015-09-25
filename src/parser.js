@@ -3,8 +3,6 @@ var Ast    = require('./ast.js'),
     Ok     = Result.Ok,
     Err    = Result.Err;
 
-
-
 /**
  * Parses the given string into a token representing the number.
  * @param {String} source - String to parse.
@@ -23,13 +21,39 @@ module.exports = function(source) {
     }
   };
 
-  var expr = parseBodyExpression(srcDesc);
+  var expr = parseGene(srcDesc);
 
   if (expr.is_err()) {
     return expr.get_err();
   }
 
   return expr.get_ok().toString();
+};
+
+var parseGene = function(srcDesc) {
+  var startSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+5);
+  if (startSlice !== 'start') {
+    return Err( "Expected keyword 'start' at index: " + srcDesc.cursorIndex );
+  } else {
+    srcDesc.cursorIndex += 5;
+  }
+
+  var bodyExprs = [];
+  var bodyExpression = parseBodyExpression(srcDesc);
+  while (!bodyExpression.is_err()) {
+    bodyExprs.push(bodyExpression.get_ok());
+
+    bodyExpression = parseBodyExpression(srcDesc);
+  }
+
+  var stopSlice = srcDesc.src.slice(srcDesc.cursorIndex, srcDesc.cursorIndex+4);
+  if (stopSlice !== 'stop') {
+    return Err( "Expected keyword 'stop' at index: " + srcDesc.cursorIndex );
+  } else {
+    srcDesc.cursorIndex += 4;
+  }
+
+  return Ok( Ast.createGene(bodyExprs) );
 };
 
 var parseBodyExpression = function(srcDesc) {
@@ -49,6 +73,8 @@ var parseBodyExpression = function(srcDesc) {
       }
 
       return parseExpression(srcDesc).and_then(function(expression) {
+
+        // A body expression must end with a ;
         if (srcDesc.peek() === ';') {
           srcDesc.cursorIndex++;
           return Ok( Ast.createBodyExpression(variable, expression) );
@@ -179,10 +205,17 @@ var parseNumber = function(srcDesc) {
 };
 
 var parseVariable = function(srcDesc) {
+  var preMatch = /stop/;
   var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
   var currSrc = srcDesc.src.slice(srcDesc.cursorIndex);
-  var results = currSrc.match(matcher);
+
+  var results = currSrc.match(preMatch);
+  if (results && results.index === 0) {
+    return Err( "Stop is a keyword and cannot be used as a variable" );
+  }
+
+  results = currSrc.match(matcher);
   if (!results || results.index !== 0) {
     return Err(
       "could not parse variable starting at index " + (srcDesc.cursorIndex+1)
