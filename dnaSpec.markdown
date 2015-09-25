@@ -5,7 +5,8 @@ DNA will be specified in BNF-like format.
 ----
 
 ```HTML
-<body-expression> ::= <variable> <- <expression>
+
+<body-expression> ::= <variable> <- <expression> ;
 <expression>      ::= <term> + <exrpession> | <term> - <expression> | <term>
 <term>            ::= <factor> * <term> | <factor> / <term> | <factor>
 <factor>          ::= <unary> ^ <factor> | <unary>
@@ -13,5 +14,6 @@ DNA will be specified in BNF-like format.
 <group>           ::= <number> | <variable> | ( <expression> )
 <variable>        ::= (\w+)
 <number>          ::= \d*(\.\d*)?
+
 ```
 

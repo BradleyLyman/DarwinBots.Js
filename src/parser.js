@@ -49,7 +49,12 @@ var parseBodyExpression = function(srcDesc) {
       }
 
       return parseExpression(srcDesc).and_then(function(expression) {
-        return Ok( Ast.createBodyExpression(variable, expression) );
+        if (srcDesc.peek() === ';') {
+          srcDesc.cursorIndex++;
+          return Ok( Ast.createBodyExpression(variable, expression) );
+        } else {
+          return Err( "Expected ';' at index: " + srcDesc.cursorIndex );
+        }
       });
     });
 };
@@ -165,7 +170,7 @@ var parseNumber = function(srcDesc) {
 
   var newIdx = srcDesc.cursorIndex + results[0].length;
   var next = srcDesc.src[newIdx];
-  if (next && !next.toString().match(/[\+\-\*\/\^\)]/)) {
+  if (next && !next.toString().match(/[\+\-\*\/\^\)\;]/)) {
     return Err( "Error parsing number at index " + newIdx );
   }
 
