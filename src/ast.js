@@ -7,8 +7,11 @@ module.exports.createGene = function(condExpression, bodyExpressions) {
     toString        : function() {
       var body = "Gene(\n  Cond(\n";
 
-      body += "    " + condExpression.toString() + "\n  )\n";
+      if (condExpression) {
+        body += "    " + condExpression.toString() + "\n";
+      }
 
+      body += "  )\n";
       body += "  Body(\n";
       bodyExpressions.forEach(function(expression) {
         body += "    " + expression.toString() + "\n";

@@ -68,12 +68,12 @@ module.exports = function(rawSource) {
       if (results && results.index === 0) {
         var newLineDesc = processNewline(results[0]);
 
-        this.line     += newLineDesc.lineCount;
+        this.line += newLineDesc.lineCount;
         if (newLineDesc.lineCount > 0) {
           this.lineStart = this.cursor + newLineDesc.indexOfLastLine;
         }
 
-        this.cursor   += results[0].length;
+        this.cursor += results[0].length;
       }
     },
 
@@ -93,8 +93,8 @@ module.exports = function(rawSource) {
       }
 
       var line = this.src.slice(this.lineStart, nextNewLine) + "\n";
-      var errLen = this.cursor - this.lineStart - 1;
-      var errDesc = "Error on line " + this.line + " : " + errLen + "\n";
+      var errLen = this.cursor - this.lineStart;
+      var errDesc = "Error on line " + this.line + " : " + (errLen + 1) + "\n";
 
       return errDesc + line + (new Array(errLen)).join(' ') + '^\n' + err;
     }
