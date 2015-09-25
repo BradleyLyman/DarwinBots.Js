@@ -23,13 +23,35 @@ module.exports = function(source) {
     }
   };
 
-  var expr = parseExpression(srcDesc);
+  var expr = parseBodyExpression(srcDesc);
 
   if (expr.is_err()) {
     return expr.get_err();
   }
 
   return expr.get_ok().toString();
+};
+
+var parseBodyExpression = function(srcDesc) {
+  return parseVariable(srcDesc)
+    .and_then(function(variable) {
+      // if <- then this is a proper body expression
+      if (srcDesc.peek() === '<') {
+        srcDesc.cursorIndex++;
+      } else {
+        return Err( "Expected '<' at index: " + srcDesc.cursorIndex );
+      }
+
+      if (srcDesc.peek() === '-') {
+        srcDesc.cursorIndex++;
+      } else {
+        return Err( "Expected '-' at index: " + srcDesc.cursorIndex );
+      }
+
+      return parseExpression(srcDesc).and_then(function(expression) {
+        return Ok( Ast.createBodyExpression(variable, expression) );
+      });
+    });
 };
 
 var parseExpression = function(srcDesc) {

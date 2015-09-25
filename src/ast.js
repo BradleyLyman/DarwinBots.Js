@@ -1,4 +1,15 @@
 
+module.exports.createBodyExpression = function(variable, expression) {
+  return {
+    type       : 'BodyExpression',
+    variable   : variable,
+    expression : expression,
+    toString   : function() {
+      return "BodyExpression: " + variable.toString() + " <- " + expression.toString();
+    }
+  };
+};
+
 module.exports.createNumber = function(val) {
   return {
     type     : 'Number',
