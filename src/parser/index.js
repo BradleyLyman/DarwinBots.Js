@@ -11,8 +11,7 @@ var Ast    = require('./ast.js'),
  **/
 module.exports = function(source) {
   var srcMgr = sourceManager(source);
-
-  var expr = parseGene(srcMgr);
+  var expr   = parseGene(srcMgr);
 
   if (expr.is_err()) {
     return expr.get_err();

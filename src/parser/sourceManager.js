@@ -3,6 +3,19 @@ var Result = require('object-result'),
     Err    = Result.Err;
 
 /**
+ * Strips comments out of the source code and replaces them
+ * with whitespace. This keeps the cursor and line numbers
+ * correct, but prevents us from having to parse these lines.
+ **/
+var stripComments = function(source) {
+  var commentMatcher = /('(.*)\n)/g;
+
+  return source.replace(commentMatcher, function(match) {
+    return (new Array(match.length)).join(' ') + '\n';
+  });
+};
+
+/**
  * Searches for newline indicators in the line given.
  * Returns a tuple containing the number of lines in the string, and the index
  * of the character at the beginning of the most recent line (indexOfLastLine).
@@ -34,13 +47,14 @@ var processNewline = function(line) {
  **/
 module.exports = function(rawSource) {
   var whitespaceMatcher = /(\s+)/;
+  var cleanSource = stripComments(rawSource);
 
   return {
-    src       : rawSource,  // Source code, represented as a single string
-    cursor    : 0,          // Current location in the code, used by the parser
-    lineStart : 0,          // Cursor location where the current line started
-    line      : 1,          // Current line-count
-    parenCtr  : 0,          // Tracks unclosed parens -- useful for redundancy
+    src       : cleanSource,  // Source code, represented as a single string
+    cursor    : 0,            // Current location in the code, used by the parser
+    lineStart : 0,            // Cursor location where the current line started
+    line      : 1,            // Current line-count
+    parenCtr  : 0,            // Tracks unclosed parens -- useful for redundancy
 
     /**
      * Peek at the current character.
