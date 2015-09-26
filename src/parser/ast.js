@@ -158,8 +158,8 @@ module.exports.createNumber = function(val) {
 module.exports.createDivExpr = function(factor1, factor2) {
   return {
     type     : 'DivExpr',
-    factor1  : factor1,
-    factor2  : factor2,
+    term1    : factor1,
+    term2    : factor2,
     toString : function() {
       return "DivExpr(" + factor1.toString() + " / " + factor2.toString() + ")";
     }
@@ -169,8 +169,8 @@ module.exports.createDivExpr = function(factor1, factor2) {
 module.exports.createMulExpr = function(factor1, factor2) {
   return {
     type     : 'MulExpr',
-    factor1  : factor1,
-    factor2  : factor2,
+    term1    : factor1,
+    term2    : factor2,
     toString : function() {
       return "MulExpr(" + factor1.toString() + " * " + factor2.toString() + ")";
     }
@@ -202,8 +202,8 @@ module.exports.createSubExpr = function(term1, term2) {
 module.exports.createPowExpr = function(base, exp) {
   return {
     type     : 'PowExpr',
-    base     : base,
-    exp      : exp,
+    term1    : base,
+    term2    : exp,
     toString : function() {
       return "PowExpr(" + base.toString() + " ^ " + exp.toString() + ")";
     }

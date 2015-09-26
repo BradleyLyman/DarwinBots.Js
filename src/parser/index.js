@@ -15,7 +15,7 @@ module.exports = function(source) {
   var genes = [];
   var geneResult = parseGene(srcMgr);
   while (!geneResult.is_err()) {
-    genes.push(geneResult.get_ok().toString());
+    genes.push(geneResult.get_ok());
 
     geneResult = parseGene(srcMgr);
   }
