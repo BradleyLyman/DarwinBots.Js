@@ -28,3 +28,6 @@ DNA will be specified in BNF-like format.
 
 ```
 
+Comments can be added to lines. Any region beginning with a ' and ending with a
+newline is considered a comment.
+

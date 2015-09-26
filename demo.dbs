@@ -2,6 +2,6 @@
 cond
   3 > 10 + 1
 start
-  aoeu <- 3 + 2
+  aoeu <- 3 + 2 ' / 100
   aoeu <- (1 - 3 * (4 - 1/3 ))
 stop
