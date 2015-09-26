@@ -15,7 +15,7 @@ var Ast    = require('./ast.js'),
  * bot's state.
  * @return {function} A function which takes a 'sysvars' object.
  **/
-module.exports.compileDna = function(dnaNode) {
+module.exports = function(dnaNode) {
   var geneFuncs = dnaNode.genes.map(function(gene, index) {
     return compileGene(gene);
   });

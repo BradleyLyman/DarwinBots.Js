@@ -1,22 +1,15 @@
 var fs = require('fs');
-var parse = require('./src/parser/index.js'),
-    compiler = require('./src/parser/compiler.js');
+var darwinBots = require('../src/index.js');
 
-var parsedSource, compiledSource;
 
-fs.readFile('./demo.dbs', 'utf8', function(err, source) {
+fs.readFile('./demo/demo.dbs', 'utf8', function(err, source) {
   if (err) {
     throw err;
   }
 
-  parse(source)
-    .and_then(function(dna) {
-      parsedSource   = dna;
-      compiledSource = compiler.compileDna(dna);
-
+  darwinBots.compileSource(source)
+    .and_then(function(compiledSource) {
       var sysvars = {};
-      console.log(sysvars);
-      compiledSource(sysvars);
 
       var timesToRun = 1000;
       console.log("Executing source " + timesToRun + " times.");
