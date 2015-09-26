@@ -1,10 +1,16 @@
 var fs = require('fs');
-var parser = require('./src/parser/index.js');
+var parse = require('./src/parser/index.js');
 
 fs.readFile('./demo.dbs', 'utf8', function(err, source) {
   if (err) {
     throw err;
   }
 
-  console.log(parser(source));
+  parse(source)
+    .and_then(function(dna) {
+      console.log(dna.toString());
+    })
+    .or_else(function(err) {
+      console.log(err);
+    });
 });

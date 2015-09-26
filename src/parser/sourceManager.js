@@ -50,11 +50,12 @@ module.exports = function(rawSource) {
   var cleanSource = stripComments(rawSource);
 
   return {
-    src       : cleanSource,  // Source code, represented as a single string
-    cursor    : 0,            // Current location in the code, used by the parser
-    lineStart : 0,            // Cursor location where the current line started
-    line      : 1,            // Current line-count
-    parenCtr  : 0,            // Tracks unclosed parens -- useful for redundancy
+    src        : cleanSource,  // Source code, represented as a single string
+    cursor     : 0,            // Current location in the code, used by the parser
+    lineStart  : 0,            // Cursor location where the current line started
+    line       : 1,            // Current line-count
+    parenCtr   : 0,            // Tracks unclosed parens -- useful for redundancy
+    insideGene : 0,            // Flag, tracks if the gene has been completed
 
     /**
      * Peek at the current character.

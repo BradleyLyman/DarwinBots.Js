@@ -1,3 +1,20 @@
+module.exports.createDna = function(genes) {
+  return {
+    type     : 'Dna',
+    genes    : genes,
+    toString : function() {
+      var dnaString = "Dna Start:\n\n";
+
+      genes.forEach(function(gene) {
+        dnaString += gene.toString();
+        dnaString += "\n";
+      });
+
+      return dnaString + "Dna End";
+    }
+  };
+};
+
 module.exports.createGene = function(condExpression, bodyExpressions) {
   return {
     type            : 'Gene',

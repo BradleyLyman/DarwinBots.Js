@@ -11,19 +11,32 @@ var Ast    = require('./ast.js'),
  **/
 module.exports = function(source) {
   var srcMgr = sourceManager(source);
-  var expr   = parseGene(srcMgr);
 
-  if (expr.is_err()) {
-    return expr.get_err();
+  var genes = [];
+  var geneResult = parseGene(srcMgr);
+  while (!geneResult.is_err()) {
+    genes.push(geneResult.get_ok().toString());
+
+    geneResult = parseGene(srcMgr);
   }
 
-  return expr.get_ok().toString();
+  if (srcMgr.insideGene !== 0) {
+    return geneResult;
+  }
+
+  return srcMgr
+    .expect('end')
+    .and_then(function() {
+      return Ok( Ast.createDna(genes) );
+    });
 };
 
 var parseGene = function(srcMgr) {
   return srcMgr
     .expect('cond')
     .and_then(function() {
+      srcMgr.insideGene = 1;
+
       // parse cond block, checking first for an empty block
       if (srcMgr.expect('start').is_err()) {
         return parseCondExpression(srcMgr)
@@ -51,6 +64,7 @@ var parseGene = function(srcMgr) {
         return bodyExpression;
       }
 
+      srcMgr.insideGene = 0;
       return Ok( Ast.createGene(condExpression, bodyExprs) );
     });
 };
@@ -240,7 +254,7 @@ var parseNumber = function(srcMgr) {
 };
 
 var parseVariable = function(srcMgr) {
-  var keywordMatch = /stop|and|or|start|cond/;
+  var keywordMatch = /stop|and|or|start|cond|end/;
   var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
   return srcMgr
