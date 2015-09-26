@@ -23,6 +23,15 @@ module.exports.createGene = function(condExpression, bodyExpressions) {
   };
 };
 
+module.exports.createEmptyCond = function() {
+  return {
+    type     : 'EmptyCond',
+    toString : function() {
+      return "";
+    }
+  };
+};
+
 module.exports.createAndPhrase = function(lhs, rhs) {
   return {
     type     : 'AndPhrase',
