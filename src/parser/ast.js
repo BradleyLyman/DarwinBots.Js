@@ -1,4 +1,3 @@
-
 module.exports.createGene = function(condExpression, bodyExpressions) {
   return {
     type            : 'Gene',
