@@ -1,3 +1,11 @@
+/**
+ * Contains method for creating nodes for the abstract syntax tree.
+ * @module Parser/Ast
+ **/
+
+/**
+ * Creates dna node with the given array of gene nodes.
+ **/
 module.exports.createDna = function(genes) {
   return {
     type     : 'Dna',
@@ -15,6 +23,9 @@ module.exports.createDna = function(genes) {
   };
 };
 
+/**
+ * Creates gene node using the given cond and body expression nodes.
+ **/
 module.exports.createGene = function(condExpression, bodyExpressions) {
   return {
     type            : 'Gene',
@@ -39,6 +50,9 @@ module.exports.createGene = function(condExpression, bodyExpressions) {
   };
 };
 
+/**
+ * Creates a node representing an empty conditional statement.
+ **/
 module.exports.createEmptyCond = function() {
   return {
     type     : 'EmptyCond',
@@ -48,6 +62,9 @@ module.exports.createEmptyCond = function() {
   };
 };
 
+/**
+ * Creates an And-Phrase node using the lhs and rhs Or-Phrase nodes.
+ **/
 module.exports.createAndPhrase = function(lhs, rhs) {
   return {
     type     : 'AndPhrase',
@@ -59,6 +76,9 @@ module.exports.createAndPhrase = function(lhs, rhs) {
   };
 };
 
+/**
+ * Creates an Or-Phrase node using the lhs and rhs nodes.
+ **/
 module.exports.createOrPhrase = function(lhs, rhs) {
   return {
     type     : 'OrPhrase',
@@ -70,6 +90,9 @@ module.exports.createOrPhrase = function(lhs, rhs) {
   };
 };
 
+/**
+ * Creates an expression evaluating equality using exp1 and exp2 nodes.
+ **/
 module.exports.createEqualExpr = function(exp1, exp2) {
   return {
     type     : 'EqualExpr',
@@ -81,6 +104,9 @@ module.exports.createEqualExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an expression showing exp1 < exp2.
+ **/
 module.exports.createLessExpr = function(exp1, exp2) {
   return {
     type     : 'LessExpr',
@@ -92,6 +118,9 @@ module.exports.createLessExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an expression showing exp1 > exp2.
+ **/
 module.exports.createGreaterExpr = function(exp1, exp2) {
   return {
     type     : 'GreaterExpr',
@@ -103,6 +132,9 @@ module.exports.createGreaterExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an expression showing exp1 >= exp2.
+ **/
 module.exports.createGEExpr = function(exp1, exp2) {
   return {
     type     : 'GEExpr',
@@ -114,6 +146,9 @@ module.exports.createGEExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an expression showing exp1 <= exp2.
+ **/
 module.exports.createLEExpr = function(exp1, exp2) {
   return {
     type     : 'LEExpr',
@@ -125,6 +160,9 @@ module.exports.createLEExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an expression showing exp1 != exp2.
+ **/
 module.exports.createNEExpr = function(exp1, exp2) {
   return {
     type     : 'NEExpr',
@@ -136,6 +174,10 @@ module.exports.createNEExpr = function(exp1, exp2) {
   };
 };
 
+/**
+ * Creates an node representing a body expression of the form
+ * variable <- expression.
+ **/
 module.exports.createBodyExpression = function(variable, expression) {
   return {
     type       : 'BodyExpression',
@@ -147,6 +189,9 @@ module.exports.createBodyExpression = function(variable, expression) {
   };
 };
 
+/**
+ * Creates a node representing a single numeric value.
+ **/
 module.exports.createNumber = function(val) {
   return {
     type     : 'Number',
@@ -155,6 +200,9 @@ module.exports.createNumber = function(val) {
   };
 };
 
+/**
+ * Creates a node representing division between the first and second factors.
+ **/
 module.exports.createDivExpr = function(factor1, factor2) {
   return {
     type     : 'DivExpr',
@@ -166,6 +214,10 @@ module.exports.createDivExpr = function(factor1, factor2) {
   };
 };
 
+/**
+ * Creates a node representing multiplication between the first and second
+ * factors.
+ **/
 module.exports.createMulExpr = function(factor1, factor2) {
   return {
     type     : 'MulExpr',
@@ -177,6 +229,9 @@ module.exports.createMulExpr = function(factor1, factor2) {
   };
 };
 
+/**
+ * Creates a node representing addition between the first and second terms.
+ **/
 module.exports.createAddExpr = function(term1, term2) {
   return {
     type     : 'AddExpr',
@@ -188,6 +243,9 @@ module.exports.createAddExpr = function(term1, term2) {
   };
 };
 
+/**
+ * Creates a node representing subtraction between term1 and term2.
+ **/
 module.exports.createSubExpr = function(term1, term2) {
   return {
     type     : 'SubExpr',
@@ -199,6 +257,9 @@ module.exports.createSubExpr = function(term1, term2) {
   };
 };
 
+/**
+ * Creates a node representing base ^ pow between a unary and a factor.
+ **/
 module.exports.createPowExpr = function(base, exp) {
   return {
     type     : 'PowExpr',
@@ -210,6 +271,9 @@ module.exports.createPowExpr = function(base, exp) {
   };
 };
 
+/**
+ * Creates a node representing a negated value.
+ **/
 module.exports.createUnaryMinus = function(unary) {
   return {
     type     : 'Minus',
@@ -220,6 +284,9 @@ module.exports.createUnaryMinus = function(unary) {
   };
 };
 
+/**
+ * Creates a node representing a variable.
+ **/
 module.exports.createVariable = function(name) {
   return {
     type     : 'Variable',

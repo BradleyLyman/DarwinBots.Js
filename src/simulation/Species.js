@@ -1,6 +1,6 @@
 /**
  * Methods and objects for managing a DarwinBots.js simulation.
- * @module Simulation
+ * @module Simulation/Species
  **/
 
 var parser = require('../parser/index.js');

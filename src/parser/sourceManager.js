@@ -1,3 +1,9 @@
+/**
+ * Provides methods for creating a sourceManager object which manages a
+ * string representing DNA code.
+ * @module Parser/SourceManager
+ **/
+
 var Result = require('object-result'),
     Ok     = Result.Ok,
     Err    = Result.Err;
@@ -6,6 +12,8 @@ var Result = require('object-result'),
  * Strips comments out of the source code and replaces them
  * with whitespace. This keeps the cursor and line numbers
  * correct, but prevents us from having to parse these lines.
+ * @param {String} source - Raw source code with comments.
+ * @return {String} Source code with comments replaced with spaces.
  **/
 var stripComments = function(source) {
   var commentMatcher = /('(.*)\n)/g;
@@ -39,53 +47,99 @@ var processNewline = function(line) {
 };
 
 /**
+ * @typedef SourceManager
+ * @type {Object}
+ * @property {String} src - Source code stripped of comments.
+ * @property {Number} cursor - Current location in the code, used by the parser.
+ * @property {Number} lineStart - Cursor location of the start of the line.
+ * @property {Number} line - Current line number.
+ * @property {Number} parenCtr - Tracks unclosed parens -- used for
+ *                               error checking within the parser.
+ * @property {Number} insideGene - Flag, tracks if the parser is currently
+ *                                 parsing code inside of a gene. This is used
+ *                                 for error checking within the parser.
+ * @property {Function} peek - Look at the character under the cursor.
+ * @property {Function} next - Skips whitespace and returns the next
+ *                             non-whitespace character.
+ * @property {ExpectCallback} expect - Matches a regex against the next
+ *                                     non-whitespace characters.
+ * @property {ExpectNotCallback} expectNot - Ensures that the next
+ *                                           non-whitespace characters do not
+ *                                           match the given regex.
+ * @property {Function} eatWhitespace - Skips whitespace until a non-whitespace
+ *                                      character is reached. Moves the cursor
+ *                                      and increments the line count
+ *                                      accordingly.
+ * @property {ErrCallback} errAtCursor - Creates an error message which shows
+ *                                       the current line and character with
+ *                                       the error displayed below.
+ **/
+
+/**
+ * Matches a regex against the next non-whitespace characters in the source
+ * code. If a match is found then the matched string is returned and the
+ * cursor is incremented, otherwise an error is returned and the cursor
+ * remains untouched.
+ * @callback ExpectCallback
+ * @param {String} key - Regular expression to expect.
+ * @param {String} errName - Name to refer to the regular expression by should
+ *                           the expected regex not be found.
+ * @return {Result} Ok value is the matched string, Err is the error described
+ *                  using the errName.
+ **/
+
+/**
+ * Matches a regex against the next non-whitespace characters in the source
+ * code. If a match is found then an error is returned using the regex's
+ * name, otherwise an Ok is returned with no value.
+ * In either case, the cursor remains unmodified.
+ * @callback ExpectNotCallback
+ * @param {String} key - Regular expression to match against.
+ * @param {String} errName - Name to refer to the regular expression by should
+ *                           the expected regex not be found.
+ * @return {Result} Ok value is empty, Err is the error described using the
+ *                  errName.
+ **/
+
+/**
+ * Generates an error message which displays the current line and cursor
+ * location with the error string beneath.
+ * @callback errAtCursor
+ * @param {String} err - The error string to be displayed.
+ * @return {String} The complete error message.
+ **/
+
+/**
  * Creates a new SourceManager instance.
  * The SourceManager helps with parsing source code by keeping track of how far
  * through the code we have parsed (using the cursor) and what line we are
  * currently on. Helper methods are provided for skipping whitespace, and
  * matching keywords.
+ * @param {String} rawSource - Raw source code as read from the file.
+ * @return {SourceManager}
  **/
 module.exports = function(rawSource) {
   var whitespaceMatcher = /(\s+)/;
   var cleanSource = stripComments(rawSource);
 
   return {
-    src        : cleanSource,  // Source code, represented as a single string
-    cursor     : 0,            // Current location in the code, used by the parser
-    lineStart  : 0,            // Cursor location where the current line started
-    line       : 1,            // Current line-count
-    parenCtr   : 0,            // Tracks unclosed parens -- useful for redundancy
-    insideGene : 0,            // Flag, tracks if the gene has been completed
+    src        : cleanSource,
+    cursor     : 0,
+    lineStart  : 0,
+    line       : 1,
+    parenCtr   : 0,
+    insideGene : 0,
 
-    /**
-     * Peek at the current character.
-     * @return the character under the cursor, does not modify the source or cursor.
-     **/
     peek : function() {
       return this.src[this.cursor];
     },
 
-    /**
-     * Skips whitespace until reaching a non-whitespace character,
-     * then returns that character.
-     * @return {String} The next non-whitespace character.
-     **/
     next : function() {
       this.eatWhitespace();
 
       return this.peek();
     },
 
-    /**
-     * Attempts to match a key against the next non-whitespace characters.
-     * Returns a Result object. Ok value is the string that was matched,
-     * the Err object contains an error string generated by errAtCursor.
-     * If Ok is returned then the cursor is automatically incremented
-     * by the length of the matched string.
-     * @param {Regex} key - The key to match against.
-     * @param {String} errName - The name to use in an error message.
-     * @return {Object} Result object containing Ok string or Err message.
-     **/
     expect : function(key, errName) {
       this.eatWhitespace();
 
@@ -102,17 +156,6 @@ module.exports = function(rawSource) {
       return Ok( results[0] );
     },
 
-    /**
-     * Similar to expect this attempts to match a key against the next
-     * non-whitespace characters. However, Ok is returned when the match
-     * is _not_ found, and Err is returned if a match is found.
-     * Ok is empty, Err contains an error message constructed with the
-     * errName.
-     * The cursor is never updated.
-     * @param {Regex} key - The key to match against.
-     * @param {String} errName - The name to use in the error message.
-     * @return {Object} Result object containing empty Ok or Err with message
-     **/
     expectNot : function(key, errName) {
       this.eatWhitespace();
 
@@ -125,11 +168,6 @@ module.exports = function(rawSource) {
       return Ok();
     },
 
-    /**
-     * Reads all of the whitespace after the cursor and increments the
-     * cursor to point to the next non-whitespace character. Records
-     * newlines as they are passed, incrementing the line counter.
-     **/
     eatWhitespace : function() {
       var currentSlice = this.src.slice(this.cursor);
 
@@ -146,14 +184,6 @@ module.exports = function(rawSource) {
       }
     },
 
-    /**
-     * Returns a string with the current line's text and a carrot under
-     * the location of the cursor. Assumes that the string will be displayed
-     * with a monospace font.
-     * The error string is displayed below the carrot.
-     * @param {String} err - The error string to display below the carrot.
-     * @return {String} Current line and carrot.
-     **/
     errAtCursor : function(err) {
       var nextNewLine = this.src.length;
       var results = this.src.slice(this.cursor).match(/[\n\r]/);

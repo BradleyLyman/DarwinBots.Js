@@ -1,5 +1,6 @@
 /**
- * @module Simulation
+ * Contains methods for creating Bot objects.
+ * @module Simulation/Bot
  **/
 
 /**

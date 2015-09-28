@@ -1,3 +1,9 @@
+/**
+ * Transforms given source code into the AST representation for
+ * consumption by the compiler.
+ * @module Parser/Parser
+ **/
+
 var Ast    = require('./ast.js'),
     sourceManager = require('./sourceManager.js'),
     Result = require('object-result'),
@@ -7,7 +13,8 @@ var Ast    = require('./ast.js'),
 /**
  * Parses the given string into a token representing the number.
  * @param {String} source - String to parse.
- * @return Result -- Ok payload is just the number.
+ * @return {Result} Ok value is Ast node representing the Dna,
+ *                  Err value is a string describing the error.
  **/
 module.exports = function(source) {
   var srcMgr = sourceManager(source);
@@ -31,6 +38,12 @@ module.exports = function(source) {
     });
 };
 
+/**
+ * Parses the remaining source code section as a gene.
+ * @param {Parser/SourceManager~SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node representing the gene,
+ *                  Err value is a string describing the error.
+ **/
 var parseGene = function(srcMgr) {
   return srcMgr
     .expect('cond')
@@ -69,10 +82,20 @@ var parseGene = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as a conditional expression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseCondExpression = function(srcMgr) {
   return parseAndPhrase(srcMgr);
 };
 
+/**
+ * Parses the next part of the source as an And-Phrase.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseAndPhrase = function(srcMgr) {
   return parseOrPhrase(srcMgr)
     .and_then(function(orPhrase) {
@@ -87,6 +110,11 @@ var parseAndPhrase = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as an Or-Phrase.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseOrPhrase = function(srcMgr) {
   return parseBoolGroup(srcMgr)
     .and_then(function(boolGroup) {
@@ -101,6 +129,11 @@ var parseOrPhrase = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as a Gene.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseBoolGroup = function(srcMgr) {
   if (srcMgr.expect(/\(/, '(').is_err()) {
     return parseBoolExpression(srcMgr);
@@ -116,6 +149,11 @@ var parseBoolGroup = function(srcMgr) {
   }
 };
 
+/**
+ * Parses the next part of the source as a BoolExpression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseBoolExpression = function(srcMgr) {
   return parseExpression(srcMgr)
     .and_then(function(expression1) {
@@ -148,6 +186,11 @@ var parseBoolExpression = function(srcMgr) {
   });
 };
 
+/**
+ * Parses the next part of the source as a BodyExpression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseBodyExpression = function(srcMgr) {
   return parseVariable(srcMgr)
     .and_then(function(variable) {
@@ -161,6 +204,11 @@ var parseBodyExpression = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as an Expression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseExpression = function(srcMgr) {
   return parseTerm(srcMgr)
     .and_then(function(term1) {
@@ -180,6 +228,11 @@ var parseExpression = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as a Term.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseTerm = function(srcMgr) {
   return parseFactor(srcMgr)
     .and_then(function(factor1) {
@@ -199,6 +252,11 @@ var parseTerm = function(srcMgr) {
     });
 };
 
+/**
+ * Parses the next part of the source as a Factor.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseFactor = function(srcMgr) {
   return parseUnary(srcMgr).and_then(function(unary) {
     if (!srcMgr.expect(/\^/, '^').is_err()) {
@@ -209,6 +267,11 @@ var parseFactor = function(srcMgr) {
   });
 };
 
+/**
+ * Parses th enext part of the source as a Unary.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseUnary = function(srcMgr) {
   if (!srcMgr.expect(/\-/, '-').is_err()) {
     return parseUnary(srcMgr).and_then(function(unary) {
@@ -219,6 +282,11 @@ var parseUnary = function(srcMgr) {
   return parseGroup(srcMgr);
 };
 
+/**
+ * Parses the next part of the source as a Group.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseGroup = function(srcMgr) {
   if (srcMgr.expect(/\(/, '(').is_err()) {
     return parseNumber(srcMgr)
@@ -237,6 +305,11 @@ var parseGroup = function(srcMgr) {
   }
 };
 
+/**
+ * Parses the next part of the source as a Number.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseNumber = function(srcMgr) {
   var matcher = /(((\d+)(\.\d*)?)|(\.\d*))(?![a-zA-Z])/;
   var numResult = srcMgr.expect(matcher, 'number');
@@ -253,6 +326,11 @@ var parseNumber = function(srcMgr) {
   return Ok( Ast.createNumber(value) );
 };
 
+/**
+ * Parses the next part of the source as a Variable.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
 var parseVariable = function(srcMgr) {
   var keywordMatch = /stop|and|or|start|cond|end/;
   var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
