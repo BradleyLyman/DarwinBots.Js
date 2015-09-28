@@ -4,6 +4,8 @@ This repo represents the core functionality of the DarwinBots.js app. All
 code directly related to the user-facing application can be found in
 the DarwinBots.js-Client repo.
 
+JsDoc can be found here: http://bradlyman.github.io/DarwinBots.Js/
+
 Right now the parser supports compiling provided source into an abstract
 syntax tree.
 
