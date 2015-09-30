@@ -1,29 +1,48 @@
 var fs = require('fs');
-var darwinBots = require('../src/index.js');
-
+var DarwinBots = require('../src/index.js');
 
 fs.readFile('./demo/demo.dbs', 'utf8', function(err, source) {
   if (err) {
     throw err;
   }
 
-  darwinBots.compileSource(source)
-    .and_then(function(compiledSource) {
-      var sysvars = {};
+  var demoSpecies = DarwinBots.Species.createSpecies(source, "demo");
+  if (!demoSpecies.isValid) {
+    console.log(demoSpecies.compileErr);
+  }
 
-      var timesToRun = 1000;
-      console.log("Executing source " + timesToRun + " times.");
+  var simConfig = {
+    initialNrg    : 100,
+    nrgDecayRate  : 2,
+    speciesConfig : [
+      { species : demoSpecies
+      , initialPopulation : 50000
+      }
+    ]
+  };
+
+  DarwinBots.Simulation.createSimulation(simConfig)
+    .and_then(function(simulation) {
       var start = process.hrtime();
-      for (var i = 0; i < timesToRun; i++) {
-        compiledSource(sysvars);
+      var steps = 10;
+
+      for (var i = 0; i < steps; i++) {
+        DarwinBots.Simulation.stepSimulation(simulation);
       }
       var duration = process.hrtime(start);
 
-      var totalTime = duration[0] * 1000 + duration[1]*1e-6;
-      console.log("duration: " + totalTime + " milliseconds");
-      console.log("time per dna execution: " + totalTime / timesToRun + " milliseconds");
+      var totalTime = duration[0] * 1000 + duration[1] * (1e-6);
+      console.log(
+        "bots in simulation: " + simConfig.speciesConfig[0].initialPopulation
+      );
+      console.log("simulation steps: " + steps);
+      console.log("total simulation time: " + totalTime + " ms");
+      console.log("time per simulation step: " + totalTime / steps + " ms");
     })
     .or_else(function(err) {
       console.log(err);
     });
 });
+
+
+

@@ -34,7 +34,7 @@ module.exports.createSpecies = function(rawSource, name) {
   return {
     rawSource  : rawSource,
     name       : name,
-    isValid    : compileResult.is_err(),
+    isValid    : !compileResult.is_err(),
     dnaCmd     : compileResult.get_ok(),
     compileErr : compileResult.get_err()
   };
