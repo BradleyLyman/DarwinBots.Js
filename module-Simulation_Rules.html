@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: Simulation/Species</title>
+    <title>JSDoc: Module: Simulation/Rules</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Module: Simulation/Species</h1>
+    <h1 class="page-title">Module: Simulation/Rules</h1>
 
     
 
@@ -38,7 +38,7 @@
     <div class="container-overview">
     
         
-            <div class="description">Methods and objects for managing a DarwinBots.js simulation.</div>
+            <div class="description">Rules for dictating how the simulation advances each cycle.</div>
         
 
         
@@ -87,7 +87,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="simulation_Species.js.html">simulation/Species.js</a>, <a href="simulation_Species.js.html#line1">line 1</a>
+        <a href="simulation_Rules.js.html">simulation/Rules.js</a>, <a href="simulation_Rules.js.html#line1">line 1</a>
     </li></ul></dd>
     
 
@@ -137,14 +137,14 @@
 
     
 
-    <h4 class="name" id=".createSpecies"><span class="type-signature">(static) </span>createSpecies<span class="signature">(rawSource, name)</span><span class="type-signature"> &rarr; {Species}</span></h4>
+    <h4 class="name" id=".passiveNrgDecay"><span class="type-signature">(static) </span>passiveNrgDecay<span class="signature">(simulation)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Creates a new Species object.
+    Passively decays the nrg for each bot in the simulation.
 </div>
 
 
@@ -180,13 +180,13 @@
 
         <tr>
             
-                <td class="name"><code>rawSource</code></td>
+                <td class="name"><code>simulation</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Simulation</span>
 
 
             
@@ -196,30 +196,7 @@
 
             
 
-            <td class="description last">The species' raw dna source code.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The species' name.</td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -260,7 +237,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="simulation_Species.js.html">simulation/Species.js</a>, <a href="simulation_Species.js.html#line31">line 31</a>
+        <a href="simulation_Rules.js.html">simulation/Rules.js</a>, <a href="simulation_Rules.js.html#line10">line 10</a>
     </li></ul></dd>
     
 
@@ -283,43 +260,23 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Species</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
         
-    
-
-    
-        <h3 class="subsection-title">Type Definitions</h3>
-
-        
-                
+            
 
     
 
-    <h4 class="name" id="~DnaCallback"><span class="type-signature"></span>DnaCallback<span class="signature">(sysvars)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".removeDeadBots"><span class="type-signature">(static) </span>removeDeadBots<span class="signature">(simulation)</span><span class="type-signature"></span></h4>
 
     
 
 
+
+<div class="description">
+    Removes bots with nrg <= 0.
+</div>
 
 
 
@@ -354,13 +311,13 @@
 
         <tr>
             
-                <td class="name"><code>sysvars</code></td>
+                <td class="name"><code>simulation</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">Simulation</span>
 
 
             
@@ -370,7 +327,7 @@
 
             
 
-            <td class="description last">Bot's sysvars object.</td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -411,7 +368,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="simulation_Species.js.html">simulation/Species.js</a>, <a href="simulation_Species.js.html#line20">line 20</a>
+        <a href="simulation_Rules.js.html">simulation/Rules.js</a>, <a href="simulation_Rules.js.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -437,34 +394,33 @@
 
 
 
+        
             
-                
-<h4 class="name" id="~Species">Species</h4>
-
-
-
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">Object</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-    <h5 class="subsection-title">Properties:</h5>
 
     
 
-<table class="props">
+    <h4 class="name" id=".syncSysvars"><span class="type-signature">(static) </span>syncSysvars<span class="signature">(simulation)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Syncs the bot's sysvars with the simulation values.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -486,13 +442,13 @@
 
         <tr>
             
-                <td class="name"><code>rawSource</code></td>
+                <td class="name"><code>simulation</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Simulation</span>
 
 
             
@@ -502,106 +458,14 @@
 
             
 
-            <td class="description last">The species' raw dna source code.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The species' name.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>isValid</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Bool</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">True if the dna compiles successfully.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>dnaCmd</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">DnaCallback</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Function for executing the species'
-                                 dna, this is undefined if isValid == false.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>compileErr</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">String describing the compilation error,
-                                this is undefined if isValid == true.</td>
+            <td class="description last"></td>
         </tr>
 
     
     </tbody>
 </table>
+
+
 
 
 
@@ -635,7 +499,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="simulation_Species.js.html">simulation/Species.js</a>, <a href="simulation_Species.js.html#line8">line 8</a>
+        <a href="simulation_Rules.js.html">simulation/Rules.js</a>, <a href="simulation_Rules.js.html#line30">line 30</a>
     </li></ul></dd>
     
 
@@ -651,7 +515,19 @@
 
 
 
-            
+
+
+
+
+
+
+
+
+
+
+        
+    
+
     
 
     

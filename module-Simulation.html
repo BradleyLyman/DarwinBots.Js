@@ -29,6 +29,8 @@
 <header>
     
         
+            
+        
     
 </header>
 
@@ -36,6 +38,80 @@
     <div class="container-overview">
     
         
+            <div class="description">Methods for creating and running a complete DarwinBots simulation.</div>
+        
+
+        
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
     
@@ -54,13 +130,614 @@
     
 
     
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".createSimulation"><span class="type-signature">(static) </span>createSimulation<span class="signature">(config)</span><span class="type-signature"> &rarr; {Result}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Create a new simulation from the configuration.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>config</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">SimulationConfig</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line44">line 44</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Ok value is a simulation object, Err value is a string
+                 describing what went wrong.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Result</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".stepSimulation"><span class="type-signature">(static) </span>stepSimulation<span class="signature">(The)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Steps the simulation through a single cycle.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>The</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Simulation</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">simulation to update.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line89">line 89</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
 
     
         <h3 class="subsection-title">Type Definitions</h3>
 
         
                 
-<h4 class="name" id="~Bot">Bot</h4>
+<h4 class="name" id="~Simulation">Simulation</h4>
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>config</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">SimulationConfig</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Configuration object describing the
+                                      various simulation parameters.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bots</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Bot></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array of Bots currently alive in the sim.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line30">line 30</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+<h4 class="name" id="~SimulationConfig">SimulationConfig</h4>
+
+
+
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>initialNrg</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Initial Nrg for each Bot.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>nrgDecayRate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Minimum nrg cost of living, the bots
+                                  loose this amount of nrg each cycle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>speciesConfig</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;SpeciesConfig></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Array describing the
+                                                  initial populations.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line20">line 20</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+            
+                
+<h4 class="name" id="~SpeciesConfig">SpeciesConfig</h4>
 
 
 
@@ -123,37 +800,14 @@
 
             
 
-            <td class="description last">The bot's species.</td>
+            <td class="description last">The species that is being configured.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>sysvars</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The bot's sysvars.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>nrg</code></td>
+                <td class="name"><code>initialPopulation</code></td>
             
 
             <td class="type">
@@ -169,8 +823,8 @@
 
             
 
-            <td class="description last">The bot's current energy level, when this reaches
-                         zero the bot dies.</td>
+            <td class="description last">The initial population of bots of
+                                       this species.</td>
         </tr>
 
     
@@ -209,7 +863,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="simulation_Bot.js.html">simulation/Bot.js</a>, <a href="simulation_Bot.js.html#line5">line 5</a>
+        <a href="simulation_Simulation.js.html">simulation/Simulation.js</a>, <a href="simulation_Simulation.js.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -239,13 +893,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Parser.html">Parser</a></li><li><a href="module-Parser_Ast.html">Parser/Ast</a></li><li><a href="module-Parser_Compiler.html">Parser/Compiler</a></li><li><a href="module-Parser_Parser.html">Parser/Parser</a></li><li><a href="module-Parser_SourceManager.html">Parser/SourceManager</a></li><li><a href="module-Simulation.html">Simulation</a></li><li><a href="module-Simulation_Species.html">Simulation/Species</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Parser.html">Parser</a></li><li><a href="module-Parser_Ast.html">Parser/Ast</a></li><li><a href="module-Parser_Compiler.html">Parser/Compiler</a></li><li><a href="module-Parser_Parser.html">Parser/Parser</a></li><li><a href="module-Parser_SourceManager.html">Parser/SourceManager</a></li><li><a href="module-Simulation.html">Simulation</a></li><li><a href="module-Simulation_Bot.html">Simulation/Bot</a></li><li><a href="module-Simulation_Rules.html">Simulation/Rules</a></li><li><a href="module-Simulation_Species.html">Simulation/Species</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Mon Sep 28 2015 12:59:50 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Wed Sep 30 2015 07:03:05 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>
