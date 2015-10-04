@@ -23,8 +23,8 @@ var Bot    = require('./Bot.js'),
  * @property {Number} initialNrg - Initial Nrg for each Bot.
  * @property {Number} nrgDecayRate - Minimum nrg cost of living, the bots
  *                                   loose this amount of nrg each cycle.
- * @property {Array.<SpeciesConfig>} speciesConfig - Array describing the
- *                                                   initial populations.
+ * @property {Dict<String,SpeciesConfig>} speciesConfig - Map of species names
+ *                                                        to species configs.
  **/
 
 /**
@@ -42,12 +42,15 @@ var Bot    = require('./Bot.js'),
  *                  describing what went wrong.
  **/
 module.exports.createSimulation = function(config) {
+  var speciesConfig = config.speciesConfig;
+  var speciesNames = Object.getOwnPropertyNames(speciesConfig);
+
   // ensure all species are valid
   var err;
-  config.speciesConfig.forEach(function(speciesConfig) {
-    if (!speciesConfig.species.isValid) {
+  speciesNames.forEach(function(name) {
+    if (speciesConfig[name].isValid === false) {
       err = Err(
-        "Cannot create a simulation with " + speciesConfig.species.name +
+        "Cannot create a simulation with " + name +
         " because that species is not valid."
       );
     }
@@ -59,12 +62,12 @@ module.exports.createSimulation = function(config) {
 
   // create all bots in the simulation
   var bots = [];
-  config.speciesConfig.forEach(function(speciesConfig, index) {
+  speciesNames.forEach(function(speciesName, index) {
     var i = 0;
     var bot;
 
-    for (i = 0; i < speciesConfig.initialPopulation; i++) {
-      bot           = Bot.createBot(speciesConfig.species);
+    for (i = 0; i < speciesConfig[speciesName].initialPopulation; i++) {
+      bot           = Bot.createBot(speciesConfig[speciesName].species);
       bot.nrg       = config.initialNrg;
       bot.speciesId = index;
       bots.push(bot);
@@ -100,7 +103,3 @@ module.exports.stepSimulation = function(simulation) {
   // finished executing
   Rules.syncSysvars(simulation);
 };
-
-
-
-
