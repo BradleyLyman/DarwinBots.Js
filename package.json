@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "nodemon runtests.js -w src -w test"
+    "test": "nodemon -w test -w src --exec 'mocha --compilers js:mocha-traceur --recursive test'"
   },
   "repository": {
     "type": "git",
@@ -20,10 +20,12 @@
     "diveSync": "^0.3.0",
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.0.0",
+    "mocha-traceur": "^2.1.0",
     "nodeunit": "^0.9.1"
   },
   "dependencies": {
     "keymirror": "^0.1.1",
-    "object-result": "^1.0.0"
+    "object-result": "^1.0.0",
+    "should": "^7.1.0"
   }
 }
