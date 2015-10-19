@@ -18,9 +18,12 @@
   "homepage": "https://github.com/BradLyman/DarwinBots.Js#readme",
   "devDependencies": {
     "diveSync": "^0.3.0",
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^1.0.0",
     "nodeunit": "^0.9.1"
   },
   "dependencies": {
+    "keymirror": "^0.1.1",
     "object-result": "^1.0.0"
   }
 }
