@@ -150,6 +150,14 @@ UMinusExpr.prototype = {
   execute : function(sysvars) {
     return -this.expression.execute(sysvars);
   },
+
+  /**
+   * Creates a human-readable representation of the unary expression.
+   * @return {String} Pretty-printed form of this node.
+   **/
+  toString : function() {
+    return "Minus(" + this.expression.toString() + ")";
+  },
 };
 
 /** @class Literal **/
@@ -169,6 +177,14 @@ Literal.prototype = {
    **/
   execute : function() {
     return this.value;
+  },
+
+  /**
+   * Creates a human-readable representation of the literal.
+   * @return {String} Pretty-printed form of this node.
+   **/
+  toString : function() {
+    return "Literal(" + this.value + ")";
   },
 };
 
@@ -191,6 +207,14 @@ Variable.prototype = {
    **/
   execute : function(sysvars) {
     return sysvars[this.name] || 0;
+  },
+
+  /**
+   * Creates a human-readable representation of the variable.
+   * @return {String} Pretty-printed form of this node.
+   **/
+  toString : function() {
+    return "Variable(" + this.name + ")";
   },
 };
 
