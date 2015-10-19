@@ -19,7 +19,7 @@ CondExpression.prototype = {
   toString : function() {
     return this.type() + "(" +
       this.lhs.toString() + ", " + this.rhs.toString() + ")";
-  }
+  },
 };
 
 /** @class ECondExpr **/
@@ -171,7 +171,7 @@ module.exports.createECondExpr = function(lhs, rhs) {
   return {
     __proto__ : ECondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };
 
@@ -185,7 +185,7 @@ module.exports.createLCondExpr = function(lhs, rhs) {
   return {
     __proto__ : LCondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };
 
@@ -199,7 +199,7 @@ module.exports.createGCondExpr = function(lhs, rhs) {
   return {
     __proto__ : GCondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };
 
@@ -213,7 +213,7 @@ module.exports.createGECondExpr = function(lhs, rhs) {
   return {
     __proto__ : GECondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };
 
@@ -227,7 +227,7 @@ module.exports.createLECondExpr = function(lhs, rhs) {
   return {
     __proto__ : LECondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };
 
@@ -241,6 +241,6 @@ module.exports.createNECondExpr = function(lhs, rhs) {
   return {
     __proto__ : NECondExpr.prototype,
     lhs       : lhs,
-    rhs       : rhs
+    rhs       : rhs,
   };
 };

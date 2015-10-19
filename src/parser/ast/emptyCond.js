@@ -41,6 +41,6 @@ EmptyCond.prototype = {
  **/
 module.exports.createEmptyCond = function() {
   return {
-    __proto__ : EmptyCond.prototype
+    __proto__ : EmptyCond.prototype,
   };
 };

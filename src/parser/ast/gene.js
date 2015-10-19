@@ -64,6 +64,6 @@ module.exports.createGene = function(cond, bodyStmts) {
   return {
     __proto__ : Gene.prototype,
     cond      : cond,
-    bodyStmts : bodyStmts
+    bodyStmts : bodyStmts,
   };
 };

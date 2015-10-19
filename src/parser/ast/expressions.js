@@ -40,7 +40,7 @@ SubExpr.prototype = {
    **/
   execute : function(sysvars) {
     return this.lhs.execute(sysvars) - this.rhs.execute(sysvars);
-  }
+  },
 };
 
 /** @class AddExpr **/
@@ -62,7 +62,7 @@ AddExpr.prototype = {
    **/
   execute : function(sysvars) {
     return this.lhs.execute(sysvars) + this.rhs.execute(sysvars);
-  }
+  },
 };
 
 /** @class MulExpr **/
@@ -84,7 +84,7 @@ MulExpr.prototype = {
    **/
   execute : function(sysvars) {
     return this.lhs.execute(sysvars) * this.rhs.execute(sysvars);
-  }
+  },
 };
 
 /** @class DivExpr **/
@@ -106,7 +106,7 @@ DivExpr.prototype = {
    **/
   execute : function(sysvars) {
     return this.lhs.execute(sysvars) / this.rhs.execute(sysvars);
-  }
+  },
 };
 
 /** @class PowExpr **/
@@ -128,7 +128,7 @@ PowExpr.prototype = {
    **/
   execute : function(sysvars) {
     return Math.pow(this.lhs.execute(sysvars), this.rhs.execute(sysvars));
-  }
+  },
 };
 
 /** @class UMinusExpr **/
