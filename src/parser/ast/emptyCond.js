@@ -5,6 +5,7 @@
 let typenames = require('./typenames.js');
 
 /** @class EmptyCond **/
+let EmptyCond = {};
 
 EmptyCond.prototype = {
   /** @lends EmptyCond **/
