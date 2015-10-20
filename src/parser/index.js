@@ -5,10 +5,9 @@
  **/
 
 var parse   = require('./parser.js'),
-    compile = require('./compiler.js'),
     Result  = require('object-result'),
-    Ok      = Result.Ok,
-    Err     = Result.Err;
+    ok      = Result.createOk,
+    err     = Result.createErr;
 
 /**
  * Compiles the given DNA source code into an executable javascript function.
@@ -17,8 +16,5 @@ var parse   = require('./parser.js'),
  *                  is an error message describing why compilation failed.
  **/
 module.exports.compileSource = function(sourceAsString) {
-  return parse(sourceAsString)
-    .and_then(function(sourceAsAST) {
-      return Ok( compile(sourceAsAST) );
-    });
+  return parse(sourceAsString);
 };
