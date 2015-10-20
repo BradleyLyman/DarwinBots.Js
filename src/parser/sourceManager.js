@@ -125,7 +125,7 @@ SourceManager.prototype = {
    * current position.
    **/
   eatWhitespace : function() {
-    let whitespaceMatcher = /(s+)/;
+    let whitespaceMatcher = /(\s+)/;
     let currentSlice = this.src.slice(this.cursor);
 
     let results = currentSlice.match(whitespaceMatcher);

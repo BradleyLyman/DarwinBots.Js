@@ -33,8 +33,9 @@ describe('The parser', function() {
 
 
   describe('when parsing variable names', function() {
-    let valid   = 'abcda',
-        invalid = '23a';
+    let valid    = 'abcda',
+        invalid  = '23a',
+        keywords = ['cond', 'and', 'or', 'start', 'stop', 'end'];
 
     it('should parse valid variable names', function() {
       let srcMgr = manager(valid),
@@ -45,6 +46,26 @@ describe('The parser', function() {
       result.get_ok().type().should.equal(astTypes.VARIABLE);
       result.get_ok().should.have.property('name');
       result.get_ok().name.should.equal(valid);
+    });
+
+    it('should not parse invalid variable names', function() {
+      let srcMgr = manager(invalid),
+          result = parser.parseVariable(srcMgr);
+
+      result.is_ok().should.not.be.ok();
+      result.get_err().should.be.an.instanceOf(String);
+    });
+
+    describe('should not accept keywords as variables', function() {
+      keywords.forEach(function(word) {
+        it(word, function() {
+          let srcMgr = manager(word),
+              result = parser.parseVariable(srcMgr);
+
+          result.is_ok().should.not.be.ok();
+          result.get_err().should.be.an.instanceOf(String);
+        });
+      });
     });
   });
 });
