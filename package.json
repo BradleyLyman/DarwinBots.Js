@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "nodemon -w test -w src --exec 'mocha --compilers js:mocha-traceur --recursive test'"
+    "test": "nodemon -w test -w src --exec 'mocha --compilers js:mocha-traceur test/parser'"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,9 @@
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.0.0",
     "mocha-traceur": "^2.1.0",
-    "nodeunit": "^0.9.1"
+    "nodeunit": "^0.9.1",
+    "traceur": "0.0.92",
+    "traceur-runner": "^2.0.1"
   },
   "dependencies": {
     "keymirror": "^0.1.1",

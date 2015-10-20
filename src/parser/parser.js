@@ -1,14 +1,15 @@
+'use strict';
 /**
  * Transforms given source code into the AST representation for
  * consumption by the compiler.
  * @module Parser/Parser
  **/
 
-var Ast    = require('./ast.js'),
+var Ast           = require('./ast.js'),
     sourceManager = require('./sourceManager.js'),
-    Result = require('object-result'),
-    Ok     = Result.Ok,
-    Err    = Result.Err;
+    Result        = require('object-result'),
+    ok            = Result.createOk,
+    err           = Result.createErr;
 
 /**
  * Parses the given string into a token representing the number.
@@ -305,52 +306,48 @@ var parseGroup = function(srcMgr) {
   }
 };
 
-/**
- * Parses the next part of the source as a Number.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
-var parseNumber = function(srcMgr) {
-  var matcher = /(((\d+)(\.\d*)?)|(\.\d*))(?![a-zA-Z])/;
-  var numResult = srcMgr.expect(matcher, 'number');
+let parseLiteral = function(srcMgr) {
+  let matcher = /(((\d+)(\.\d*)?)|(\.\d*))(?![a-zA-Z])/;
 
-  if (numResult.is_err()) {
-    return numResult;
-  }
-
-  var value = +numResult.get_ok();
-  if (isNaN(value)) {
-    return Err( srcMgr.errAtCursor("Expected valid number") );
-  }
-
-  return Ok( Ast.createNumber(value) );
+  return srcMgr
+    .expect(matcher, 'number')
+    .and_then(function(value) {
+      if (isNaN(+value)) {
+        return err( srcMgr.errAtCursor("Expected valid number") );
+      }
+    })
+    .map(function(value) {
+      return Ast.createLiteral(+value);
+    });
 };
 
-/**
- * Parses the next part of the source as a Variable.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
-var parseVariable = function(srcMgr) {
-  var keywordMatch = /stop|and|or|start|cond|end/;
-  var matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
+let parseVariable = function(srcMgr) {
+  let keywordMatch = /stop|and|or|start|cond|end/;
+  let matcher = /[a-zA-Z]+(\d+[a-zA-Z]*)*/;
 
   return srcMgr
     .expectNot(keywordMatch, 'keyword')
     .and_then(function() {
       return srcMgr.expect(matcher, 'variable');
     })
-    .and_then(function(varName) {
-      return Ok( Ast.createVariable(varName) );
+    .map(function(varName) {
+      return Ast.createVariable(varName);
     });
 };
 
+// ------------------ PUBLIC EXPORTS --------------------------------- //
 
+/**
+ * Parses the next part of the source as a Number.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseLiteral = parseLiteral;
 
-
-
-
-
-
-
+/**
+ * Parses the next part of the source as a Variable.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseVariable = parseVariable;
 

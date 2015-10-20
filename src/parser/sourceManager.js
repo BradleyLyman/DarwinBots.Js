@@ -3,10 +3,10 @@
  * string representing DNA code.
  * @module Parser/SourceManager
  **/
-
-var Result = require('object-result'),
-    Ok     = Result.Ok,
-    Err    = Result.Err;
+'use strict';
+let Result = require('object-result'),
+    ok     = Result.createOk,
+    err    = Result.createErr;
 
 /**
  * Strips comments out of the source code and replaces them
@@ -15,8 +15,8 @@ var Result = require('object-result'),
  * @param {String} source - Raw source code with comments.
  * @return {String} Source code with comments replaced with spaces.
  **/
-var stripComments = function(source) {
-  var commentMatcher = /('(.*)\n)/g;
+let stripComments = function(source) {
+  let commentMatcher = /('(.*)\n)/g;
 
   return source.replace(commentMatcher, function(match) {
     return (new Array(match.length)).join(' ') + '\n';
@@ -30,11 +30,11 @@ var stripComments = function(source) {
  * @param {String} line - The line to search for newline chars.
  * @return {Object} { lineCount, indexOfLastLine }
  **/
-var processNewline = function(line) {
-  var newlineMatcher = /[\n\r]/;
-  var lineCount = 0, lastLine = 0;
+let processNewline = function(line) {
+  let newlineMatcher = /[\n\r]/;
+  let lineCount = 0, lastLine = 0;
 
-  var lineResults = line.match(newlineMatcher);
+  let lineResults = line.match(newlineMatcher);
 
   while (lineResults) {
     lineCount++;
@@ -46,68 +46,122 @@ var processNewline = function(line) {
   return { lineCount : lineCount, indexOfLastLine : lastLine };
 };
 
-/**
- * @typedef SourceManager
- * @type {Object}
- * @property {String} src - Source code stripped of comments.
- * @property {Number} cursor - Current location in the code, used by the parser.
- * @property {Number} lineStart - Cursor location of the start of the line.
- * @property {Number} line - Current line number.
- * @property {Number} parenCtr - Tracks unclosed parens -- used for
- *                               error checking within the parser.
- * @property {Number} insideGene - Flag, tracks if the parser is currently
- *                                 parsing code inside of a gene. This is used
- *                                 for error checking within the parser.
- * @property {Function} peek - Look at the character under the cursor.
- * @property {Function} next - Skips whitespace and returns the next
- *                             non-whitespace character.
- * @property {ExpectCallback} expect - Matches a regex against the next
- *                                     non-whitespace characters.
- * @property {ExpectNotCallback} expectNot - Ensures that the next
- *                                           non-whitespace characters do not
- *                                           match the given regex.
- * @property {Function} eatWhitespace - Skips whitespace until a non-whitespace
- *                                      character is reached. Moves the cursor
- *                                      and increments the line count
- *                                      accordingly.
- * @property {ErrCallback} errAtCursor - Creates an error message which shows
- *                                       the current line and character with
- *                                       the error displayed below.
- **/
+/** @class SourceManager **/
+let SourceManager = {};
 
-/**
- * Matches a regex against the next non-whitespace characters in the source
- * code. If a match is found then the matched string is returned and the
- * cursor is incremented, otherwise an error is returned and the cursor
- * remains untouched.
- * @callback ExpectCallback
- * @param {String} key - Regular expression to expect.
- * @param {String} errName - Name to refer to the regular expression by should
- *                           the expected regex not be found.
- * @return {Result} Ok value is the matched string, Err is the error described
- *                  using the errName.
- **/
+SourceManager.prototype = {
+  /** @lends SourceManager **/
 
-/**
- * Matches a regex against the next non-whitespace characters in the source
- * code. If a match is found then an error is returned using the regex's
- * name, otherwise an Ok is returned with no value.
- * In either case, the cursor remains unmodified.
- * @callback ExpectNotCallback
- * @param {String} key - Regular expression to match against.
- * @param {String} errName - Name to refer to the regular expression by should
- *                           the expected regex not be found.
- * @return {Result} Ok value is empty, Err is the error described using the
- *                  errName.
- **/
 
-/**
- * Generates an error message which displays the current line and cursor
- * location with the error string beneath.
- * @callback errAtCursor
- * @param {String} err - The error string to be displayed.
- * @return {String} The complete error message.
- **/
+  /**
+   * Retrieves the character under the cursor.
+   * @return {String} The character under the cursor.
+   **/
+  peek : function() {
+    return this.src[this.cursor];
+  },
+
+  /**
+   * Moves the cursor to the next non-whitespace character and returns
+   * that character.
+   * @return {String} The character under the cursor.
+   **/
+  next : function() {
+    this.eatWhitespace();
+
+    return this.peek();
+  },
+
+  /**
+   * Attempts to match the next non-whitespace characters against a regular
+   * expression. On success the cursor is incremented past the matched string,
+   * on failure the cursor is left in place.
+   * @param {String} key - The regular expression to match.
+   * @param {String} errName - The name to use for the error, if not-specified
+   *                           the key is used as the error's name.
+   * @return {Result} Ok value is the matched string, Err value is a message
+   *                  describing the error.
+   **/
+  expect : function(key, errName) {
+    this.eatWhitespace();
+
+    let slice = this.src.slice(this.cursor);
+    let results = slice.match(key);
+    if (!results || results.index !== 0) {
+      return err(
+        this.errAtCursor("Expected to find " + (errName || key.toString()))
+      );
+    }
+
+    this.cursor += results[0].length;
+
+    return ok( results[0] );
+  },
+
+  /**
+   * Verifies that the provided regular expression does not match next sequence
+   * of non-whitespace characters. This method does not modify the cursor's
+   * location other than to skip whitespace.
+   * @param {String} key - The regular expression to match.
+   * @param {String} errName - The name to use for the error, if not provided
+   *                           then the key is used as the error's name.
+   * @return {Result} Ok value is empty (indicating the match was not found),
+   *                  Err is a string describing what went wrong.
+   **/
+  expectNot : function(key, errName) {
+    this.eatWhitespace();
+
+    let slice = this.src.slice(this.cursor);
+    let results = slice.match(key);
+    if (results && results.index === 0) {
+      return err( this.errAtCursor("Unexpected " + errName) );
+    }
+
+    return ok('');
+  },
+
+  /**
+   * Increments the cursor past any whitespace immediately following its
+   * current position.
+   **/
+  eatWhitespace : function() {
+    let whitespaceMatcher = /(s+)/;
+    let currentSlice = this.src.slice(this.cursor);
+
+    let results = currentSlice.match(whitespaceMatcher);
+    if (results && results.index === 0) {
+      let newLineDesc = processNewline(results[0]);
+
+      this.line += newLineDesc.lineCount;
+      if (newLineDesc.lineCount > 0) {
+        this.lineStart = this.cursor + newLineDesc.indexOfLastLine;
+      }
+
+      this.cursor += results[0].length;
+    }
+  },
+
+  /**
+   * Generates an error message using the cursor's position and the line count
+   * to indicate where in the source the error originated.
+   * @param {String} err - A custom message to be displayed explaining the err.
+   * @return {String} A pre-formated message intended to explain the error --
+   *                  it is best viewed with a monospace font.
+   **/
+  errAtCursor : function(err) {
+    let nextNewLine = this.src.length;
+    let results = this.src.slice(this.cursor).match(/[\n\r]/);
+    if (results) {
+      nextNewLine = this.cursor + results.index;
+    }
+
+    let line = this.src.slice(this.lineStart, nextNewLine) + "\n";
+    let errLen = this.cursor - this.lineStart;
+    let errDesc = "Error on line " + this.line + " : " + (errLen + 1) + "\n";
+
+    return errDesc + line + (new Array(errLen)).join(' ') + '^\n' + err;
+  }
+};
 
 /**
  * Creates a new SourceManager instance.
@@ -119,96 +173,15 @@ var processNewline = function(line) {
  * @return {SourceManager}
  **/
 module.exports = function(rawSource) {
-  var whitespaceMatcher = /(\s+)/;
-  var cleanSource = stripComments(rawSource);
+  let cleanSource = stripComments(rawSource);
 
   return {
+    __proto__  : SourceManager.prototype,
     src        : cleanSource,
     cursor     : 0,
     lineStart  : 0,
     line       : 1,
     parenCtr   : 0,
     insideGene : 0,
-
-    peek : function() {
-      return this.src[this.cursor];
-    },
-
-    next : function() {
-      this.eatWhitespace();
-
-      return this.peek();
-    },
-
-    expect : function(key, errName) {
-      this.eatWhitespace();
-
-      var slice = this.src.slice(this.cursor);
-      var results = slice.match(key);
-      if (!results || results.index !== 0) {
-        return Err(
-          this.errAtCursor("Expected to find " + (errName || key.toString()))
-        );
-      }
-
-      this.cursor += results[0].length;
-
-      return Ok( results[0] );
-    },
-
-    expectNot : function(key, errName) {
-      this.eatWhitespace();
-
-      var slice = this.src.slice(this.cursor);
-      var results = slice.match(key);
-      if (results && results.index === 0) {
-        return Err( this.errAtCursor("Unexpected " + errName) );
-      }
-
-      return Ok();
-    },
-
-    eatWhitespace : function() {
-      var currentSlice = this.src.slice(this.cursor);
-
-      var results = currentSlice.match(whitespaceMatcher);
-      if (results && results.index === 0) {
-        var newLineDesc = processNewline(results[0]);
-
-        this.line += newLineDesc.lineCount;
-        if (newLineDesc.lineCount > 0) {
-          this.lineStart = this.cursor + newLineDesc.indexOfLastLine;
-        }
-
-        this.cursor += results[0].length;
-      }
-    },
-
-    errAtCursor : function(err) {
-      var nextNewLine = this.src.length;
-      var results = this.src.slice(this.cursor).match(/[\n\r]/);
-      if (results) {
-        nextNewLine = this.cursor + results.index;
-      }
-
-      var line = this.src.slice(this.lineStart, nextNewLine) + "\n";
-      var errLen = this.cursor - this.lineStart;
-      var errDesc = "Error on line " + this.line + " : " + (errLen + 1) + "\n";
-
-      return errDesc + line + (new Array(errLen)).join(' ') + '^\n' + err;
-    }
   };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
