@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports a factory function for creating an empty conditional block.
  * @module Parser/Ast/emptyCond

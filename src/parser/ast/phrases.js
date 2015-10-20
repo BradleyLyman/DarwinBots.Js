@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports a factory function for creating an AST node representing an
  * and-phrase.

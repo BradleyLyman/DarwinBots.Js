@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports a factory function for creating a body expression from a variable
  * and an expression.

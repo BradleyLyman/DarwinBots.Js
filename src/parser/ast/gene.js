@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports a factor method for creating an AST node representing a gene.
  * @module Parser/Ast/gene

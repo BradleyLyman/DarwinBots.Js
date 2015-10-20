@@ -9,6 +9,7 @@
     "space-before-blocks"  : 2,
     "brace-style"          : [2, "stroustrup", { "allowSingleLine" : true}],
     "comma-dangle"         : [2, "always"],
+    "strict"               : [2, "global"],
   },
   "env" : { "node" : true },
 }

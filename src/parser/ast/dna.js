@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports a factor function for creating a Dna ast node.
  * @module Parser/Ast/dna
