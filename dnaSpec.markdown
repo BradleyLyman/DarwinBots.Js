@@ -1,6 +1,6 @@
 # DarwinBots DNA Spec
 
-DNA will be specified in BNF-like format.
+DNA spec as EBNF.
 
 ----
 
@@ -11,8 +11,8 @@ DNA will be specified in BNF-like format.
 
 
 <body-expression> ::= <variable> <- <expression>
-<expression>      ::= <exrpession> + <term> | <expression> - <term> | <term>
-<term>            ::= <term> * <factor> | <term> / <factor> | <factor>
+<expression>      ::= <term> {+|- <term>} | <term>
+<term>            ::= <factor> {*|/ <factor>} | <factor>
 <factor>          ::= <unary> ^ <factor> | <unary>
 <unary>           ::= - <unary> | <group>
 <group>           ::= <number> | <variable> | ( <expression> )

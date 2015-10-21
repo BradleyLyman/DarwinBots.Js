@@ -206,41 +206,66 @@ var parseBodyExpression = function(srcMgr) {
 };
 
 var parseExpression = function(srcMgr) {
-  return parseTerm(srcMgr)
-    .and_then(function(term) {
-      if (srcMgr.expect(/\+/, '+').is_ok()) {
-        return parseExpression(srcMgr).map((expr) =>
-          Ast.createAddExpr(term, expr)
-        );
-      }
+  let addOpMacher = /\+|\-/;
+  let expr = parseTerm(srcMgr);
+  let term = ok();
+  let op   = srcMgr.expect(addOpMacher, 'addition op');
 
-      if (srcMgr.expect(/\-/, '-').is_ok()) {
-        return parseExpression(srcMgr).map((expr) =>
-          Ast.createSubExpr(term, expr)
-        );
-      }
+  while (op.is_ok()) {
+    term = parseTerm(srcMgr);
+    if (term.is_err()) {
+      return term;
+    }
 
-      // otherwise this is just a term, so no modification
-    });
+    switch (op.get_ok()) {
+      case '+':
+        expr = ok(
+          Ast.createAddExpr(expr.get_ok(), term.get_ok())
+        );
+        break;
+
+      case '-':
+        expr = ok(
+          Ast.createSubExpr(expr.get_ok(), term.get_ok())
+        );
+        break;
+    }
+
+    op = srcMgr.expect(addOpMacher, 'addition op');
+  }
+
+  return expr;
 };
 
 var parseTerm = function(srcMgr) {
-  return parseFactor(srcMgr)
-    .and_then((factor) => {
-      if (srcMgr.expect(/\*/, '*').is_ok()) {
-        return parseTerm(srcMgr).map((term) =>
-          Ast.createMulExpr(factor, term)
-        );
-      }
+  let mulOpMatcher = /\*|\//;
+  let term = parseFactor(srcMgr);
+  let op = srcMgr.expect(mulOpMatcher);
+  let factor = ok('');
 
-      if (srcMgr.expect(/\//, '/').is_ok()) {
-        return parseTerm(srcMgr).map((term) =>
-          Ast.createDivExpr(factor, term)
-        );
-      }
+  while (op.is_ok()) {
+    factor = parseFactor(srcMgr);
+    if (factor.is_err()) {
+      return factor;
+    }
 
-      // otherwise this is just a factor, do nothing
-    });
+    switch (op.get_ok()) {
+      case '*':
+        term = ok(
+          Ast.createMulExpr(term.get_ok(), factor.get_ok())
+        );
+        break;
+      case '/':
+        term = ok(
+          Ast.createDivExpr(term.get_ok(), factor.get_ok())
+        );
+        break;
+    }
+
+    op = srcMgr.expect(mulOpMatcher);
+  }
+
+  return term;
 };
 
 var parseFactor = function(srcMgr) {

@@ -4,11 +4,15 @@ let should  = require('should'),
     manager = require('../../src/parser/sourceManager.js');
 
 let exprDescs = [
-  [ '2*2 + 3', 7 ],
-  [ '3^2*4 + 1', 37 ] ,
-  [ '3^(2*4) + 1', 6562 ],
+  [ '2 - 3 - 5', -6 ],
+  [ '2 - (3 - 5)', 4 ],
   [ '2 / -1 / 2', -1 ],
+  [ '2 / (-1 / 2)', -4 ],
+  [ '2 / (3 - 4) / 2', -1 ],
+  [ '2 / ((3-4) / 2)', -4 ],
   [ '2^3^2', 512 ],
+  [ '(2^3)^2', 64 ],
+
 ];
 
 describe('The parser', function() {
