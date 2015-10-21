@@ -150,11 +150,6 @@ let parseBoolGroup = function(srcMgr) {
   }
 };
 
-/**
- * Parses the next part of the source as a BoolExpression.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 let parseBoolExpression = function(srcMgr) {
   return parseExpression(srcMgr)
     .and_then(function(expression1) {
@@ -163,25 +158,25 @@ let parseBoolExpression = function(srcMgr) {
         return boolOp;
       }
 
-      return parseExpression(srcMgr).and_then(function(expression2) {
+      return parseExpression(srcMgr).map((expression2) => {
         switch (boolOp.get_ok()) {
           case '=':
-            return Ok( Ast.createEqualExpr(expression1, expression2) );
+            return Ast.createECondExpr(expression1, expression2);
 
           case '<':
-            return Ok( Ast.createLessExpr(expression1, expression2) );
+            return Ast.createLCondExpr(expression1, expression2);
 
           case '>':
-            return Ok( Ast.createGreaterExpr(expression1, expression2) );
+            return Ast.createGCondExpr(expression1, expression2);
 
           case '>=':
-            return Ok( Ast.createGEExpr(expression1, expression2) );
+            return Ast.createGECondExpr(expression1, expression2);
 
           case '<=':
-            return Ok( Ast.createLEExpr(expression1, expression2) );
+            return Ast.createLECondExpr(expression1, expression2);
 
           case '!=':
-            return Ok( Ast.createNEExpr(expression1, expression2) );
+            return Ast.createNECondExpr(expression1, expression2);
         }
       });
   });
@@ -401,3 +396,10 @@ module.exports.parseExpression = parseExpression;
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
 module.exports.parseBodyExpression = parseBodyExpression;
+
+/**
+ * Parses the next part of the source as a BoolExpression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseBoolExpression = parseBoolExpression;
