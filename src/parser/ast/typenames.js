@@ -25,6 +25,7 @@ let astTypes = keyMirror({
   UMINUS_EXPR  : null,
   LITERAL      : null,
   VARIABLE     : null,
+  BODY_EXPR    : null,
 });
 
 module.exports = astTypes;

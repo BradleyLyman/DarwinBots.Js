@@ -17,7 +17,7 @@ BodyExpression.prototype = {
    * pretty-printing.
    * @return {String} This node's type name.
    **/
-  type : function() { return typenames.BODY_EXPRESSION; },
+  type : function() { return typenames.BODY_EXPR; },
 
   /**
    * Executes this node in the dna.

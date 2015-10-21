@@ -5,7 +5,7 @@
  * @module Parser/Parser
  **/
 
-var Ast           = require('./ast.js'),
+let Ast           = require('./ast.js'),
     sourceManager = require('./sourceManager.js'),
     Result        = require('object-result'),
     ok            = Result.createOk,
@@ -18,10 +18,10 @@ var Ast           = require('./ast.js'),
  *                  Err value is a string describing the error.
  **/
 module.exports = function(source) {
-  var srcMgr = sourceManager(source);
+  let srcMgr = sourceManager(source);
 
-  var genes = [];
-  var geneResult = parseGene(srcMgr);
+  let genes = [];
+  let geneResult = parseGene(srcMgr);
   while (!geneResult.is_err()) {
     genes.push(geneResult.get_ok());
 
@@ -45,7 +45,7 @@ module.exports = function(source) {
  * @return {Result} Ok value is Ast node representing the gene,
  *                  Err value is a string describing the error.
  **/
-var parseGene = function(srcMgr) {
+let parseGene = function(srcMgr) {
   return srcMgr
     .expect('cond')
     .and_then(function() {
@@ -65,8 +65,8 @@ var parseGene = function(srcMgr) {
     })
     .and_then(function(condExpression) {
       // parse the body expressions
-      var bodyExprs = [];
-      var bodyExpression = parseBodyExpression(srcMgr);
+      let bodyExprs = [];
+      let bodyExpression = parseBodyExpression(srcMgr);
       while (!bodyExpression.is_err()) {
         bodyExprs.push(bodyExpression.get_ok());
 
@@ -88,7 +88,7 @@ var parseGene = function(srcMgr) {
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-var parseCondExpression = function(srcMgr) {
+let parseCondExpression = function(srcMgr) {
   return parseAndPhrase(srcMgr);
 };
 
@@ -97,7 +97,7 @@ var parseCondExpression = function(srcMgr) {
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-var parseAndPhrase = function(srcMgr) {
+let parseAndPhrase = function(srcMgr) {
   return parseOrPhrase(srcMgr)
     .and_then(function(orPhrase) {
       if(srcMgr.expect('and').is_err()) {
@@ -116,7 +116,7 @@ var parseAndPhrase = function(srcMgr) {
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-var parseOrPhrase = function(srcMgr) {
+let parseOrPhrase = function(srcMgr) {
   return parseBoolGroup(srcMgr)
     .and_then(function(boolGroup) {
       if (srcMgr.expect('or').is_err()) {
@@ -135,7 +135,7 @@ var parseOrPhrase = function(srcMgr) {
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-var parseBoolGroup = function(srcMgr) {
+let parseBoolGroup = function(srcMgr) {
   if (srcMgr.expect(/\(/, '(').is_err()) {
     return parseBoolExpression(srcMgr);
   } else {
@@ -155,10 +155,10 @@ var parseBoolGroup = function(srcMgr) {
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-var parseBoolExpression = function(srcMgr) {
+let parseBoolExpression = function(srcMgr) {
   return parseExpression(srcMgr)
     .and_then(function(expression1) {
-      var boolOp = srcMgr.expect(/(=)|(!=)|([\><]\=?)/, 'boolean operation');
+      let boolOp = srcMgr.expect(/(=)|(!=)|([\><]\=?)/, 'boolean operation');
       if (boolOp.is_err()) {
         return boolOp;
       }
@@ -187,25 +187,20 @@ var parseBoolExpression = function(srcMgr) {
   });
 };
 
-/**
- * Parses the next part of the source as a BodyExpression.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
-var parseBodyExpression = function(srcMgr) {
+let parseBodyExpression = function(srcMgr) {
   return parseVariable(srcMgr)
-    .and_then(function(variable) {
-      return srcMgr
-        .expect('<-')
-        .and_then(function() {
-          return parseExpression(srcMgr).and_then(function(expression) {
-            return Ok( Ast.createBodyExpression(variable, expression) );
-          });
-        });
-    });
+    .and_then((variable) => srcMgr
+      .expect('<-')
+      .map(() => variable)
+    )
+    .and_then((variable) =>
+      parseExpression(srcMgr).map((expr) =>
+        Ast.createBodyExpression(variable, expr)
+      )
+    );
 };
 
-var parseExpression = function(srcMgr) {
+let parseExpression = function(srcMgr) {
   let addOpMacher = /\+|\-/;
   let expr = parseTerm(srcMgr);
   let term = ok();
@@ -237,7 +232,7 @@ var parseExpression = function(srcMgr) {
   return expr;
 };
 
-var parseTerm = function(srcMgr) {
+let parseTerm = function(srcMgr) {
   let mulOpMatcher = /\*|\//;
   let term = parseFactor(srcMgr);
   let op = srcMgr.expect(mulOpMatcher);
@@ -268,7 +263,7 @@ var parseTerm = function(srcMgr) {
   return term;
 };
 
-var parseFactor = function(srcMgr) {
+let parseFactor = function(srcMgr) {
   return parseUnary(srcMgr)
     .and_then((unary) => srcMgr
       .expect(/\^/, '^')
@@ -283,7 +278,7 @@ var parseFactor = function(srcMgr) {
     );
 };
 
-var parseUnary = function(srcMgr) {
+let parseUnary = function(srcMgr) {
   return srcMgr
     .expect('-')
     .match({
@@ -297,7 +292,7 @@ var parseUnary = function(srcMgr) {
     });
 };
 
-var parseGroup = function(srcMgr) {
+let parseGroup = function(srcMgr) {
   return srcMgr
     .expect(/\(/, '(')
     .match({
@@ -399,3 +394,10 @@ module.exports.parseTerm = parseTerm;
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
 module.exports.parseExpression = parseExpression;
+
+/**
+ * Parses the next part of the source as a BodyExpression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseBodyExpression = parseBodyExpression;
