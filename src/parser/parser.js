@@ -234,7 +234,7 @@ var parseTerm = function(srcMgr) {
       }
 
       if (srcMgr.expect(/\//, '/').is_ok()) {
-        return parseTerm(srcMgr).map((factor) =>
+        return parseTerm(srcMgr).map((term) =>
           Ast.createDivExpr(factor, term)
         );
       }
@@ -249,8 +249,7 @@ var parseFactor = function(srcMgr) {
       .expect(/\^/, '^')
       .match({
         ok : () =>
-          parseFactor(srcMgr)
-          .and_then((factor) =>
+          parseFactor(srcMgr).map((factor) =>
             Ast.createPowExpr(unary, factor)
           ),
 
