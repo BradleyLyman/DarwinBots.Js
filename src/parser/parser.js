@@ -252,13 +252,15 @@ var parseFactor = function(srcMgr) {
   return parseUnary(srcMgr)
     .and_then((unary) => srcMgr
       .expect('^')
-      .map(() => unary)
-    )
-    .and_then((unary) =>
-      parseFactor(srcMgr)
-      .map((factor) =>
-        Ast.createPowExpr(unary, factor)
-      )
+      .match({
+        ok : () =>
+          parseFactor(srcMgr)
+          .and_then((factor) =>
+            Ast.createPowExpr(unary, factor)
+          ),
+
+        err : () => unary,
+      })
     );
 };
 
