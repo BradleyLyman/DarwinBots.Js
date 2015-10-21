@@ -17,7 +17,7 @@ let descriptors = [
 describe('The parser', () => {
   it('should not parse an invalid bool expression', () => {
     let mgr    = manager(invalid),
-        result = parser.parseBoolExpression(mgr);
+        result = parser.parseBoolTerm(mgr);
 
     result.is_err().should.be.ok();
     result.get_err().should.be.an.instanceOf(String);
@@ -26,7 +26,7 @@ describe('The parser', () => {
   descriptors.forEach((desc) => {
     it('should correctly parse '+desc[0]+' as a '+desc[1]+' expr', () => {
       let mgr    = manager(desc[0]),
-          result = parser.parseBoolExpression(mgr);
+          result = parser.parseBoolTerm(mgr);
 
       result.is_ok().should.be.ok();
 

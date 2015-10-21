@@ -137,7 +137,7 @@ let parseOrPhrase = function(srcMgr) {
  **/
 let parseBoolGroup = function(srcMgr) {
   if (srcMgr.expect(/\(/, '(').is_err()) {
-    return parseBoolExpression(srcMgr);
+    return parseBoolTerm(srcMgr);
   } else {
     return parseAndPhrase(srcMgr)
       .and_then(function(andPhrase) {
@@ -150,7 +150,7 @@ let parseBoolGroup = function(srcMgr) {
   }
 };
 
-let parseBoolExpression = function(srcMgr) {
+let parseBoolTerm = function(srcMgr) {
   return parseExpression(srcMgr)
     .and_then(function(expression1) {
       let boolOp = srcMgr.expect(/(=)|(!=)|([\><]\=?)/, 'boolean operation');
@@ -402,4 +402,4 @@ module.exports.parseBodyExpression = parseBodyExpression;
  * @param {SourceManager} srcMgr
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
-module.exports.parseBoolExpression = parseBoolExpression;
+module.exports.parseBoolTerm = parseBoolTerm;
