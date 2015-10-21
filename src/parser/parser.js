@@ -205,24 +205,19 @@ var parseBodyExpression = function(srcMgr) {
     });
 };
 
-/**
- * Parses the next part of the source as an Expression.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 var parseExpression = function(srcMgr) {
   return parseTerm(srcMgr)
-    .and_then(function(term1) {
-      if (!srcMgr.expect(/\+/, '+').is_err()) {
-        return parseExpression(srcMgr).and_then(function(term2) {
-          return Ok( Ast.createAddExpr(term1, term2) );
-        });
+    .and_then(function(term) {
+      if (srcMgr.expect(/\+/, '+').is_ok()) {
+        return parseExpression(srcMgr).map((expr) =>
+          Ast.createAddExpr(term, expr)
+        );
       }
 
-      if (!srcMgr.expect(/\-/, '-').is_err()) {
-        return parseExpression(srcMgr).and_then(function(term2) {
-          return Ok( Ast.createSubExpr(term1, term2) );
-        });
+      if (srcMgr.expect(/\-/, '-').is_ok()) {
+        return parseExpression(srcMgr).map((expr) =>
+          Ast.createSubExpr(term, expr)
+        );
       }
 
       // otherwise this is just a term, so no modification
@@ -231,27 +226,27 @@ var parseExpression = function(srcMgr) {
 
 var parseTerm = function(srcMgr) {
   return parseFactor(srcMgr)
-    .and_then(function(factor1) {
-      if (!srcMgr.expect(/\*/, '*').is_err()) {
-        return parseTerm(srcMgr).and_then(function(factor2) {
-          return Ok( Ast.createMulExpr(factor1, factor2) );
-        });
+    .and_then((factor) => {
+      if (srcMgr.expect(/\*/, '*').is_ok()) {
+        return parseTerm(srcMgr).map((term) =>
+          Ast.createMulExpr(factor, term)
+        );
       }
 
-      if (!srcMgr.expect(/\//, '/').is_err()) {
-        return parseTerm(srcMgr).and_then(function(factor2) {
-          return Ok( Ast.createDivExpr(factor1, factor2) );
-        });
+      if (srcMgr.expect(/\//, '/').is_ok()) {
+        return parseTerm(srcMgr).map((factor) =>
+          Ast.createDivExpr(factor, term)
+        );
       }
 
-      // otherwise this is just a factor so don't change anything
+      // otherwise this is just a factor, do nothing
     });
 };
 
 var parseFactor = function(srcMgr) {
   return parseUnary(srcMgr)
     .and_then((unary) => srcMgr
-      .expect('^')
+      .expect(/\^/, '^')
       .match({
         ok : () =>
           parseFactor(srcMgr)
@@ -259,7 +254,7 @@ var parseFactor = function(srcMgr) {
             Ast.createPowExpr(unary, factor)
           ),
 
-        err : () => unary,
+        err : () => ok(unary),
       })
     );
 };
@@ -280,13 +275,13 @@ var parseUnary = function(srcMgr) {
 
 var parseGroup = function(srcMgr) {
   return srcMgr
-    .expect('(')
+    .expect(/\(/, '(')
     .match({
       ok  : () => {
         srcMgr.parenCtr += 1;
         return parseExpression(srcMgr)
           .and_then((expr) => srcMgr   // check for the closing paren
-            .expect(')')
+            .expect(/\)/)
             .map(() => {
               srcMgr.parenCtr -= 1;
               return expr;
@@ -295,7 +290,7 @@ var parseGroup = function(srcMgr) {
       },
 
       err : () =>
-        parseNumber(srcMgr).or_else(() =>
+        parseLiteral(srcMgr).or_else(() =>
           parseVariable(srcMgr)
         ),
     });
@@ -373,3 +368,10 @@ module.exports.parseFactor = parseFactor;
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
 module.exports.parseTerm = parseTerm;
+
+/**
+ * Parses the next part of the source as an Expression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseExpression = parseExpression;

@@ -22,6 +22,7 @@
     "gulp-eslint": "^1.0.0",
     "mocha-traceur": "^2.1.0",
     "nodeunit": "^0.9.1",
+    "should": "^7.1.1",
     "traceur": "0.0.92",
     "traceur-runner": "^2.0.1"
   },
