@@ -17,7 +17,7 @@ let stmt1 = bodyExpr.createBodyExpression(var1, num1),
 
 describe('A Gene AST node', function() {
   it('should execute when the cond evaluates to true', function() {
-    let geneNode = gene.createGene(trueCond, [stmt1, stmt2]),
+    let geneNode = gene.createGene([trueCond], [stmt1, stmt2]),
         sysvars  = {};
 
     geneNode.execute(sysvars);
@@ -27,7 +27,7 @@ describe('A Gene AST node', function() {
   });
 
   it('should not execute when the cond evaluates to false', function() {
-    let geneNode = gene.createGene(falseCond, [stmt1, stmt2]),
+    let geneNode = gene.createGene([falseCond, trueCond], [stmt1, stmt2]),
         sysvars  = { somevar : 3300 };
 
     geneNode.execute(sysvars);

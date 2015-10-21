@@ -6,7 +6,6 @@
 let bodyExpression  = require('./ast/bodyExpression.js'),
     condExpressions = require('./ast/condExpressions.js'),
     dna             = require('./ast/dna.js'),
-    emptyCond       = require('./ast/emptyCond.js'),
     gene            = require('./ast/gene.js'),
     phrases         = require('./ast/phrases.js'),
     expressions     = require('./ast/expressions.js');
@@ -20,7 +19,6 @@ module.exports = {
   createGECondExpr : condExpressions.createGECondExpr,
   createLECondExpr : condExpressions.createLECondExpr,
   createNECondExpr : condExpressions.createNECondExpr,
-  createEmptyCond  : emptyCond.createEmptyCond,
 
   createDna : dna.createDna,
 

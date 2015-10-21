@@ -7,7 +7,7 @@ DNA spec as EBNF.
 ```HTML
 
 <dna> ::= {<gene>}
-<gene> ::= cond <cond-expression>? start {<body-expression>} stop
+<gene> ::= cond {<cond-expression>} start {<body-expression>} stop
 
 
 <body-expression> ::= <variable> <- <expression>

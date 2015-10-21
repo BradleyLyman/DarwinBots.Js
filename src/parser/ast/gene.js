@@ -26,7 +26,11 @@ Gene.prototype = {
    *                           the dna.
    **/
   execute : function(sysvars) {
-    if (this.cond.execute(sysvars) === true) {
+    let result = this.conds.reduce((total, cond) => {
+      return total && cond.execute(sysvars);
+    }, true);
+
+    if (result) {
       this.bodyStmts.forEach(function(bodyStmt) {
         bodyStmt.execute(sysvars);
       });
@@ -40,9 +44,9 @@ Gene.prototype = {
   toString : function() {
     let body = "Gene(\n  Cond(\n";
 
-    if (this.cond) {
-      body += "    " + this.cond.toString() + "\n";
-    }
+    this.conds.forEach((cond) => {
+      body += "    " + cond.toString() + "\n";
+    });
 
     body += "  )\n";
     body += "  Body(\n";
@@ -57,14 +61,14 @@ Gene.prototype = {
 
 /**
  * Creates a gene node using the given cond and body expression nodes.
- * @param {Cond} cond - The gene's cond node.
+ * @param {Array<Cond>} cond - The gene's cond statements.
  * @param {Array<BodyStmt>} bodyStmts - The body statements.
  * @return {Gene} The created gene.
  **/
-module.exports.createGene = function(cond, bodyStmts) {
+module.exports.createGene = function(conds, bodyStmts) {
   return {
     __proto__ : Gene.prototype,
-    cond      : cond,
+    conds     : conds,
     bodyStmts : bodyStmts,
   };
 };
