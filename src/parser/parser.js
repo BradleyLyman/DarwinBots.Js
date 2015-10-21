@@ -39,47 +39,50 @@ module.exports = function(source) {
     });
 };
 
-/**
- * Parses the remaining source code section as a gene.
- * @param {Parser/SourceManager~SourceManager} srcMgr
- * @return {Result} Ok value is Ast node representing the gene,
- *                  Err value is a string describing the error.
- **/
 let parseGene = function(srcMgr) {
   return srcMgr
     .expect('cond')
     .and_then(function() {
       srcMgr.insideGene = 1;
 
-      // parse cond block, checking first for an empty block
-      if (srcMgr.expect('start').is_err()) {
-        return parseCondExpression(srcMgr)
-          .and_then(function(condExpr) {
-            return srcMgr.expect('start').and_then(function() {
-              return Ok( condExpr );
-            });
-          });
-      } else {
-        return Ok( Ast.createEmptyCond() );
+      let conds = [];
+      let startResult = srcMgr.expectNot('start');
+
+      while (startResult.is_ok()) {
+        let cond = parseCondExpression(srcMgr);
+
+        if (cond.is_err()) {
+          return cond;
+        }
+
+        conds.push(cond.get_ok());
+
+        startResult = srcMgr.expectNot('start');
       }
+
+      return srcMgr.expect('start').map(() => conds);
     })
-    .and_then(function(condExpression) {
+    .and_then(function(conds) {
       // parse the body expressions
       let bodyExprs = [];
-      let bodyExpression = parseBodyExpression(srcMgr);
-      while (!bodyExpression.is_err()) {
-        bodyExprs.push(bodyExpression.get_ok());
+      let stopResult = srcMgr.expectNot('stop');
 
-        bodyExpression = parseBodyExpression(srcMgr);
+      while (stopResult.is_ok()) {
+        let bodyExpr = parseBodyExpression(srcMgr);
+
+        if (bodyExpr.is_err()) {
+          return bodyExpr;
+        }
+
+        bodyExprs.push(bodyExpr.get_ok());
+
+        stopResult = srcMgr.expectNot('stop');
       }
 
-      // catches unclosed paren errors using the paren counter
-      if (srcMgr.expect('stop').is_err() || srcMgr.parenCtr !== 0) {
-        return bodyExpression;
-      }
-
-      srcMgr.insideGene = 0;
-      return Ok( Ast.createGene(condExpression, bodyExprs) );
+      return srcMgr.expect('stop').map(() => {
+        srcMgr.insideGene = 0;
+        return Ast.createGene(conds, bodyExprs);
+      });
     });
 };
 
@@ -409,3 +412,11 @@ module.exports.parseAndPhrase = parseAndPhrase;
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
 module.exports.parseCondExpression = parseCondExpression;
+
+/**
+ * Parses the remaining source code section as a gene.
+ * @param {Parser/SourceManager~SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node representing the gene,
+ *                  Err value is a string describing the error.
+ **/
+module.exports.parseGene = parseGene;
