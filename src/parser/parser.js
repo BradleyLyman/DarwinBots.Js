@@ -229,11 +229,6 @@ var parseExpression = function(srcMgr) {
     });
 };
 
-/**
- * Parses the next part of the source as a Term.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 var parseTerm = function(srcMgr) {
   return parseFactor(srcMgr)
     .and_then(function(factor1) {
@@ -253,57 +248,55 @@ var parseTerm = function(srcMgr) {
     });
 };
 
-/**
- * Parses the next part of the source as a Factor.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 var parseFactor = function(srcMgr) {
-  return parseUnary(srcMgr).and_then(function(unary) {
-    if (!srcMgr.expect(/\^/, '^').is_err()) {
-      return parseFactor(srcMgr).and_then(function(factor) {
-        return Ok( Ast.createPowExpr(unary, factor) );
-      });
-    }
-  });
+  return parseUnary(srcMgr)
+    .and_then((unary) => srcMgr
+      .expect('^')
+      .map(() => unary)
+    )
+    .and_then((unary) =>
+      parseFactor(srcMgr)
+      .map((factor) =>
+        Ast.createPowExpr(unary, factor)
+      )
+    );
 };
 
-/**
- * Parses th enext part of the source as a Unary.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 var parseUnary = function(srcMgr) {
-  if (!srcMgr.expect(/\-/, '-').is_err()) {
-    return parseUnary(srcMgr).and_then(function(unary) {
-      return Ok( Ast.createUnaryMinus(unary) );
-    });
-  }
+  return srcMgr
+    .expect('-')
+    .match({
+      ok : () => {
+        return parseUnary(srcMgr).map((unary) =>
+          Ast.createUMinusExpr(unary)
+        );
+      },
 
-  return parseGroup(srcMgr);
+      err : () => parseGroup(srcMgr),
+    });
 };
 
-/**
- * Parses the next part of the source as a Group.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 var parseGroup = function(srcMgr) {
-  if (srcMgr.expect(/\(/, '(').is_err()) {
-    return parseNumber(srcMgr)
-      .or_else(function() {
-        return parseVariable(srcMgr);
-      });
-  } else {
-    srcMgr.parenCtr += 1;
-    return parseExpression(srcMgr)
-      .and_then(function(expr) {
-      return srcMgr.expect(/\)/, ')').and_then(function() {
-        srcMgr.parenCtr -= 1;
-        return Ok( expr );
-      });
+  return srcMgr
+    .expect('(')
+    .match({
+      ok  : () => {
+        srcMgr.parenCtr += 1;
+        return parseExpression(srcMgr)
+          .and_then((expr) => srcMgr   // check for the closing paren
+            .expect(')')
+            .map(() => {
+              srcMgr.parenCtr -= 1;
+              return expr;
+            })
+          );
+      },
+
+      err : () =>
+        parseNumber(srcMgr).or_else(() =>
+          parseVariable(srcMgr)
+        ),
     });
-  }
 };
 
 let parseLiteral = function(srcMgr) {
@@ -311,14 +304,14 @@ let parseLiteral = function(srcMgr) {
 
   return srcMgr
     .expect(matcher, 'number')
-    .and_then(function(value) {
+    .and_then((value) => {
       if (isNaN(+value)) {
         return err( srcMgr.errAtCursor("Expected valid number") );
       }
     })
-    .map(function(value) {
-      return Ast.createLiteral(+value);
-    });
+    .map((value) =>
+      Ast.createLiteral(+value)
+    );
 };
 
 let parseVariable = function(srcMgr) {
@@ -327,12 +320,12 @@ let parseVariable = function(srcMgr) {
 
   return srcMgr
     .expectNot(keywordMatch, 'keyword')
-    .and_then(function() {
-      return srcMgr.expect(matcher, 'variable');
-    })
-    .map(function(varName) {
-      return Ast.createVariable(varName);
-    });
+    .and_then(() => srcMgr
+      .expect(matcher, 'variable')
+    )
+    .map((varName) =>
+      Ast.createVariable(varName)
+    );
 };
 
 // ------------------ PUBLIC EXPORTS --------------------------------- //
@@ -351,3 +344,30 @@ module.exports.parseLiteral = parseLiteral;
  **/
 module.exports.parseVariable = parseVariable;
 
+/**
+ * Parses the next part of the source as a Group.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseGroup = parseGroup;
+
+/**
+ * Parses th enext part of the source as a Unary.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseUnary = parseUnary;
+
+/**
+ * Parses the next part of the source as a Factor.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseFactor = parseFactor;
+
+/**
+ * Parses the next part of the source as a Term.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseTerm = parseTerm;

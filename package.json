@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "keymirror": "^0.1.1",
-    "object-result": "^1.0.0",
+    "object-result": "^1.2.0",
     "should": "^7.1.0"
   }
 }
