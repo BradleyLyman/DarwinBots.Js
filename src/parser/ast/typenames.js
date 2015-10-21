@@ -10,7 +10,7 @@ let astTypes = keyMirror({
   GENE         : null,
   EMPTY_COND   : null,
   AND_PHRASE   : null,
-  OR_PHASE     : null,
+  OR_PHRASE    : null,
   E_COND_EXPR  : null,
   G_COND_EXPR  : null,
   L_COND_EXPR  : null,

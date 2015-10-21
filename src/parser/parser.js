@@ -83,71 +83,49 @@ let parseGene = function(srcMgr) {
     });
 };
 
-/**
- * Parses the next part of the source as a conditional expression.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 let parseCondExpression = function(srcMgr) {
   return parseAndPhrase(srcMgr);
 };
 
-/**
- * Parses the next part of the source as an And-Phrase.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 let parseAndPhrase = function(srcMgr) {
   return parseOrPhrase(srcMgr)
-    .and_then(function(orPhrase) {
-      if(srcMgr.expect('and').is_err()) {
-        return Ok( orPhrase );
-      } else {
-        return parseAndPhrase(srcMgr)
-          .and_then(function(andPhrase) {
-            return Ok( Ast.createAndPhrase(orPhrase, andPhrase) );
-          });
-      }
-    });
+    .and_then((orPhrase) => srcMgr
+      .expect('and')
+      .match({
+        ok : () => parseAndPhrase(srcMgr).map((andPhrase) =>
+          Ast.createAndPhrase(orPhrase, andPhrase)
+        ),
+
+        err : () => ok(orPhrase)
+      })
+    );
 };
 
-/**
- * Parses the next part of the source as an Or-Phrase.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 let parseOrPhrase = function(srcMgr) {
   return parseBoolGroup(srcMgr)
-    .and_then(function(boolGroup) {
-      if (srcMgr.expect('or').is_err()) {
-        return Ok(boolGroup);
-      } else {
-        return parseOrPhrase(srcMgr)
-          .and_then(function(orPhrase) {
-            return Ok( Ast.createOrPhrase(boolGroup, orPhrase) );
-          });
-      }
-    });
+    .and_then((boolGroup) => srcMgr
+      .expect('or')
+      .match({
+        ok : () => parseOrPhrase(srcMgr).map((phrase) =>
+          Ast.createOrPhrase(boolGroup, phrase)
+        ),
+        err : () => ok(boolGroup)
+      })
+    );
 };
 
-/**
- * Parses the next part of the source as a Gene.
- * @param {SourceManager} srcMgr
- * @return {Result} Ok value is Ast node, Err value is an error string.
- **/
 let parseBoolGroup = function(srcMgr) {
-  if (srcMgr.expect(/\(/, '(').is_err()) {
-    return parseBoolTerm(srcMgr);
-  } else {
-    return parseAndPhrase(srcMgr)
-      .and_then(function(andPhrase) {
-        return srcMgr
-          .expect(/\)/, ')')
-          .and_then(function() {
-            return Ok( andPhrase );
-          });
-      });
-  }
+  return srcMgr
+    .expect(/\(/, '(')
+    .match({
+      ok : () => parseAndPhrase(srcMgr)
+        .and_then((andPhrase) => srcMgr
+          .expect(/\)/, ')')           // check for the closing paren
+          .map(() => andPhrase)
+        ),
+
+      err : () => parseBoolTerm(srcMgr)
+    });
 };
 
 let parseBoolTerm = function(srcMgr) {
@@ -403,3 +381,31 @@ module.exports.parseBodyExpression = parseBodyExpression;
  * @return {Result} Ok value is Ast node, Err value is an error string.
  **/
 module.exports.parseBoolTerm = parseBoolTerm;
+
+/**
+ * Parses the next part of the source as a boolGroup.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseBoolGroup = parseBoolGroup;
+
+/**
+ * Parses the next part of the source as an Or-Phrase.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseOrPhrase = parseOrPhrase;
+
+/**
+ * Parses the next part of the source as an And-Phrase.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseAndPhrase = parseAndPhrase;
+
+/**
+ * Parses the next part of the source as a conditional expression.
+ * @param {SourceManager} srcMgr
+ * @return {Result} Ok value is Ast node, Err value is an error string.
+ **/
+module.exports.parseCondExpression = parseCondExpression;
