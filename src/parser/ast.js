@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Exports methods for constructing all AST node types.
  * @module Parser/Ast

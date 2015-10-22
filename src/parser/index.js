@@ -1,10 +1,11 @@
+'use strict';
 /**
  * Provides methods for compiling and manipulating DarwinBots dna
  * source code.
  * @module Parser
  **/
 
-var parse   = require('./parser.js'),
+var parser  = require('./parser.js'),
     manager = require('./sourceManager.js');
 
 /**

@@ -6,7 +6,6 @@
  **/
 
 let Ast           = require('./ast.js'),
-    sourceManager = require('./sourceManager.js'),
     Result        = require('object-result'),
     ok            = Result.createOk,
     err           = Result.createErr;
@@ -96,7 +95,7 @@ let parseAndPhrase = function(srcMgr) {
           Ast.createAndPhrase(orPhrase, andPhrase)
         ),
 
-        err : () => ok(orPhrase)
+        err : () => ok(orPhrase),
       })
     );
 };
@@ -109,7 +108,7 @@ let parseOrPhrase = function(srcMgr) {
         ok : () => parseOrPhrase(srcMgr).map((phrase) =>
           Ast.createOrPhrase(boolGroup, phrase)
         ),
-        err : () => ok(boolGroup)
+        err : () => ok(boolGroup),
       })
     );
 };
@@ -123,8 +122,7 @@ let parseBoolGroup = function(srcMgr) {
           .expect(/\)/, ')')           // check for the closing paren
           .map(() => andPhrase)
         ),
-
-      err : () => parseBoolTerm(srcMgr)
+      err : () => parseBoolTerm(srcMgr),
     });
 };
 

@@ -43,7 +43,7 @@ let processNewline = function(line) {
     lineResults = line.slice(lastLine).match(newlineMatcher);
   }
 
-  return { lineCount : lineCount, indexOfLastLine : lastLine };
+  return { lineCount : lineCount, indexOfLastLine : lastLine, };
 };
 
 /** @class SourceManager **/
@@ -160,7 +160,7 @@ SourceManager.prototype = {
     let errDesc = "Error on line " + this.line + " : " + (errLen + 1) + "\n";
 
     return errDesc + line + (new Array(errLen)).join(' ') + '^\n' + err;
-  }
+  },
 };
 
 /**
