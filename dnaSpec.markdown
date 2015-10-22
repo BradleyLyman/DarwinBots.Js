@@ -1,18 +1,18 @@
 # DarwinBots DNA Spec
 
-DNA will be specified in BNF-like format.
+DNA spec as EBNF.
 
 ----
 
 ```HTML
 
 <dna> ::= {<gene>}
-<gene> ::= cond <cond-expression>? start {<body-expression>} stop
+<gene> ::= cond {<cond-expression>} start {<body-expression>} stop
 
 
 <body-expression> ::= <variable> <- <expression>
-<expression>      ::= <term> + <exrpession> | <term> - <expression> | <term>
-<term>            ::= <factor> * <term> | <factor> / <term> | <factor>
+<expression>      ::= <term> {+|- <term>} | <term>
+<term>            ::= <factor> {*|/ <factor>} | <factor>
 <factor>          ::= <unary> ^ <factor> | <unary>
 <unary>           ::= - <unary> | <group>
 <group>           ::= <number> | <variable> | ( <expression> )

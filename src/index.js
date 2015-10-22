@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Contains the methods and objects for creating and
  * running a DarwinBots.js simulation.

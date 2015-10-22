@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Methods and objects for managing a DarwinBots.js simulation.
  * @module Simulation/Species
@@ -34,9 +35,9 @@ module.exports.createSpecies = function(rawSource, name) {
   return {
     rawSource  : rawSource,
     name       : name,
-    isValid    : !compileResult.is_err(),
-    dnaCmd     : compileResult.get_ok(),
-    compileErr : compileResult.get_err()
+    isValid    : compileResult.is_ok(),
+    dna        : compileResult.get_ok(),
+    compileErr : compileResult.get_err(),
   };
 };
 

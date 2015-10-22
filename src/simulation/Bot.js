@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Contains methods for creating Bot objects.
  * @module Simulation/Bot
@@ -25,7 +26,7 @@ module.exports.createBot = function(species) {
     species   : species,
     sysvars   : {},
     nrg       : 0,
-    speciesId : 0
+    speciesId : 0,
   };
 };
 
