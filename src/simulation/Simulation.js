@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Methods for creating and running a complete DarwinBots simulation.
  * @module Simulation
@@ -6,8 +7,8 @@
 var Bot    = require('./Bot.js'),
     Rules  = require('./Rules.js'),
     Result = require('object-result'),
-    Ok     = Result.Ok,
-    Err    = Result.Err;
+    ok     = Result.createOk,
+    err    = Result.createErr;
 
 /**
  * @typedef SpeciesConfig
@@ -43,17 +44,17 @@ var Bot    = require('./Bot.js'),
  **/
 module.exports.createSimulation = function(config) {
   // ensure all species are valid
-  var err;
+  var error;
   config.speciesConfig.forEach(function(speciesConfig) {
     if (!speciesConfig.species.isValid) {
-      err = Err(
+      error = err(
         "Cannot create a simulation with " + speciesConfig.species.name +
         " because that species is not valid."
       );
     }
   });
 
-  if (err !== undefined) {
+  if (error !== undefined) {
     return err;
   }
 
@@ -73,13 +74,13 @@ module.exports.createSimulation = function(config) {
 
   var simulation = {
     config : config,
-    bots   : bots
+    bots   : bots,
   };
 
   // sync initial sysvars before the first cycle is executed
   Rules.syncSysvars(simulation);
 
-  return Ok( simulation );
+  return ok( simulation );
 };
 
 /**
@@ -89,7 +90,7 @@ module.exports.createSimulation = function(config) {
 module.exports.stepSimulation = function(simulation) {
   // Execute each bot's brain
   simulation.bots.forEach(function(bot) {
-    bot.species.dnaCmd(bot.sysvars);
+    bot.species.dna.execute(bot.sysvars);
   });
 
   // Execute simulation rules

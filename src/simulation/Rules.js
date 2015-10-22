@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Rules for dictating how the simulation advances each cycle.
  * @module Simulation/Rules

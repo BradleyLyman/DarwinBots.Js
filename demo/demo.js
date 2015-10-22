@@ -1,3 +1,4 @@
+'use strict';
 var fs = require('fs');
 var DarwinBots = require('../src/index.js');
 
@@ -21,13 +22,13 @@ fs.readFile('./demo/demo.dbs', 'utf8', function(err, source) {
     ]
   };
 
-  DarwinBots.Simulation.createSimulation(simConfig)
+  DarwinBots.createSimulation(simConfig)
     .and_then(function(simulation) {
       var start = process.hrtime();
       var steps = 10;
 
       for (var i = 0; i < steps; i++) {
-        DarwinBots.Simulation.stepSimulation(simulation);
+        DarwinBots.stepSimulation(simulation);
       }
       var duration = process.hrtime(start);
 
