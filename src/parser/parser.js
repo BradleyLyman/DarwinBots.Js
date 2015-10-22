@@ -12,38 +12,36 @@ let Ast           = require('./ast.js'),
     err           = Result.createErr;
 
 /**
- * Parses the given string into a token representing the number.
- * @param {String} source - String to parse.
+ * Parses the given string into a complete abstract syntax tree representing
+ * the source code.
+ * @param {SourceManager} srcMgr - Source manager containing the string to parse.
  * @return {Result} Ok value is Ast node representing the Dna,
  *                  Err value is a string describing the error.
  **/
-module.exports = function(source) {
-  let srcMgr = sourceManager(source);
-
+module.exports.parseDna = function(srcMgr) {
   let genes = [];
-  let geneResult = parseGene(srcMgr);
-  while (!geneResult.is_err()) {
-    genes.push(geneResult.get_ok());
+  let endResult = srcMgr.expectNot('end');
 
-    geneResult = parseGene(srcMgr);
-  }
+  while (endResult.is_ok()) {
+    let gene = parseGene(srcMgr);
 
-  if (srcMgr.insideGene !== 0) {
-    return geneResult;
+    if (gene.is_err()) {
+      return gene;
+    }
+    genes.push(gene.get_ok());
+
+    endResult = srcMgr.expectNot('end');
   }
 
   return srcMgr
     .expect('end')
-    .and_then(function() {
-      return Ok( Ast.createDna(genes) );
-    });
+    .map(() => Ast.createDna(genes));
 };
 
 let parseGene = function(srcMgr) {
   return srcMgr
     .expect('cond')
     .and_then(function() {
-      srcMgr.insideGene = 1;
 
       let conds = [];
       let startResult = srcMgr.expectNot('start');
@@ -79,10 +77,9 @@ let parseGene = function(srcMgr) {
         stopResult = srcMgr.expectNot('stop');
       }
 
-      return srcMgr.expect('stop').map(() => {
-        srcMgr.insideGene = 0;
-        return Ast.createGene(conds, bodyExprs);
-      });
+      return srcMgr.expect('stop').map(() =>
+        Ast.createGene(conds, bodyExprs)
+      );
     });
 };
 
@@ -273,14 +270,10 @@ let parseGroup = function(srcMgr) {
     .expect(/\(/, '(')
     .match({
       ok  : () => {
-        srcMgr.parenCtr += 1;
         return parseExpression(srcMgr)
-          .and_then((expr) => srcMgr   // check for the closing paren
-            .expect(/\)/)
-            .map(() => {
-              srcMgr.parenCtr -= 1;
-              return expr;
-            })
+          .and_then((expr) => srcMgr
+            .expect(/\)/)             // check for closing paren
+            .map(() => expr)
           );
       },
 

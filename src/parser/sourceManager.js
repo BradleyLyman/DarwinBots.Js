@@ -178,10 +178,8 @@ module.exports = function(rawSource) {
   return {
     __proto__  : SourceManager.prototype,
     src        : cleanSource,
-    cursor     : 0,
-    lineStart  : 0,
-    line       : 1,
-    parenCtr   : 0,
-    insideGene : 0,
+    cursor     : 0, // tracks current position in the source
+    lineStart  : 0, // tracks cursor position of last linefeed
+    line       : 1, // current line number
   };
 };
