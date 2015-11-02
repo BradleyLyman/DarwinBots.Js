@@ -320,6 +320,17 @@ module.exports.createLiteral = function(value) {
  * @return {Variable} The Variable node.
  **/
 module.exports.createVariable = function(name) {
+  if (name === "rnd") {
+    return {
+      __proto__ : Variable.prototype,
+      name      : name,
+      execute   : function(sysvars) {
+        let raw = sysvars["rnd"] || 0;
+        return Math.random() * raw;
+      },
+    };
+  }
+
   return {
     __proto__ : Variable.prototype,
     name      : name,

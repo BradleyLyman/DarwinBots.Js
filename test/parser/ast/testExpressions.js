@@ -26,6 +26,14 @@ describe('A Variable AST node', function() {
   it("should return the variable's value when executed", function() {
     variable.execute(sysvars).should.equal(20);
   });
+
+  it('should return a random value if named rnd', function() {
+    let rndVar  = expressions.createVariable('rnd'),
+        sysvars = { rnd : 300 };
+
+    let value = rndVar.execute(sysvars);
+    (value < 300).should.be.ok();
+  });
 });
 
 describe('A UMinus AST node', function() {
