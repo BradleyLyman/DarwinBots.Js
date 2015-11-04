@@ -13,76 +13,84 @@ var Bot    = require('./Bot.js'),
 /**
  * @typedef SpeciesConfig
  * @type {Object}
- * @property {Species} species - The species that is being configured.
- * @property {Number} initialPopulation - The initial population of bots of
- *                                        this species.
+ * @property {Species} species
+ *   The species that is being configured.
+ * @property {Number} initialPopulation
+ *   The initial population of bots of this species.
  **/
 
 /**
  * @typedef SimulationConfig
  * @type {Object}
- * @property {Number} initialNrg - Initial Nrg for each Bot.
- * @property {Number} nrgDecayRate - Minimum nrg cost of living, the bots
- *                                   loose this amount of nrg each cycle.
- * @property {Dict<String,SpeciesConfig>} speciesConfig - Map of species names
- *                                                        to species configs.
+ * @property {Number} initialNrg
+ *   Initial Nrg for each Bot.
+ * @property {Number} nrgDecayRate
+ *   Minimum nrg cost per cycle to stay alive.
+ * @property {Array<SpeciesConfig>} speciesConfig
+ *   Array of species config objects, note that this means
+ *   multiple independent populations of the same species
+ *   can exist within one simulation.
  **/
 
 /**
  * @typedef Simulation
  * @type {Object}
- * @property {SimulationConfig} config - Configuration object describing the
- *                                       various simulation parameters.
- * @property {Array.<Bot>} bots - Array of Bots currently alive in the sim.
+ * @property {SimulationConfig} config
+ *   Configuration object describing the various
+ *   simulation parameters.
+ * @property {Array.<Bot>} bots
+ *   Array of Bots currently alive in the sim.
  **/
 
 /**
  * Create a new simulation from the configuration.
  * @param {SimulationConfig} config
- * @return {Result} Ok value is a simulation object, Err value is a string
- *                  describing what went wrong.
+ * @return {Result}
+ *  Ok value is a simulation object, Err value is a string
+ *  describing what went wrong.
  **/
 module.exports.createSimulation = function(config) {
-  var speciesConfig = config.speciesConfig;
-  var speciesNames = Object.getOwnPropertyNames(speciesConfig);
+  let speciesConfigArray = config.speciesConfig;
 
-  var error;
-  speciesNames.forEach((name) => {
-    if (!speciesConfig[name].species.isValid) {
+  // verify all species entries are valid
+  let error = ok('');
+  speciesConfigArray.forEach(speciesConfig => {
+    if (!speciesConfig.species.isValid) {
       error = err(
-        "Cannot create a simulation with " + name +
-        " because that species is not valid."
+        'Cannot use ' + speciesConfig.species.name +
+        'because it did not compile correctly'
       );
     }
   });
-
-  if (error !== undefined) {
+  if (error.is_err()) {
     return error;
   }
 
   // create all bots in the simulation
-  var bots = [];
-  speciesNames.forEach(function(speciesName, index) {
-    var i = 0;
-    var bot;
-
-    for (i = 0; i < speciesConfig[speciesName].initialPopulation; i++) {
-      bot           = Bot.createBot(speciesConfig[speciesName].species);
+  let bots = [];
+  speciesConfigArray.forEach((speciesConfig, index) => {
+    let species    = speciesConfig.species;
+    let population = speciesConfig.initialPopulation;
+    for (let i = 0; i < population; i++) {
+      let bot       = Bot.createBot(species);
       bot.nrg       = config.initialNrg;
       bot.speciesId = index;
       bots.push(bot);
     }
   });
 
-  var simulation = {
+  // create simulation object
+  let simulation = {
     config : config,
     bots   : bots,
   };
 
-  // sync initial sysvars before the first cycle is executed
+  // sync sysvars -- the simulation is now ready to run
   Rules.syncSysvars(simulation);
-
-  return ok( simulation );
+  console.log('aoeuaoeuaoeuoauoaeu');
+  console.log(simulation.config);
+  // return ok
+  return ok(simulation);
 };
 
 /**

@@ -15,9 +15,9 @@ fs.readFile('./demo/demo.dbs', 'utf8', function(err, source) {
   var simConfig = {
     initialNrg    : 100,
     nrgDecayRate  : 2,
-    speciesConfig : {
-      'demo' : { species : demoSpecies, initialPopulation : 50000 }
-    }
+    speciesConfig : [
+      { species : demoSpecies, initialPopulation : 50000 },
+    ]
   };
 
   DarwinBots.createSimulation(simConfig)
@@ -32,11 +32,17 @@ fs.readFile('./demo/demo.dbs', 'utf8', function(err, source) {
 
       var totalTime = duration[0] * 1000 + duration[1] * (1e-6);
       console.log(
-        "bots in simulation: " + simConfig.speciesConfig.demo.species.initialPopulation
+        "bots in simulation: " +
+        simConfig.speciesConfig[0].initialPopulation
       );
       console.log("simulation steps: " + steps);
-      console.log("total simulation time: " + totalTime + " ms");
-      console.log("time per simulation step: " + totalTime / steps + " ms");
+      console.log(
+        "total simulation time: " + totalTime + " ms"
+      );
+      console.log(
+        "time per simulation step: " +
+        totalTime / steps + " ms"
+      );
     })
     .or_else(function(err) {
       console.log(err);
