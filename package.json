@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "nodemon -w test -w src --exec 'mocha --compilers js:mocha-traceur test/parser'"
+    "test": "nodemon -w test -w src --exec 'mocha --compilers js:mocha-traceur test/parser'",
+    "doc": "babel src -d es5_build; jsdoc -r es5_build"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,8 @@
   },
   "homepage": "https://github.com/BradLyman/DarwinBots.Js#readme",
   "devDependencies": {
+    "babel": "^6.0.15",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.0.14",
     "diveSync": "^0.3.0",
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.0.0",
